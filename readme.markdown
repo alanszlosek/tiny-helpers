@@ -14,6 +14,25 @@ Like so:
 		H::a('Link text')->href('google.com')->class('link')->title('entities & magic')
 	) ?>
 
+Experimental looping support:
+
+	$li = H::li(
+		T::value()
+	);
+	$a = H::ol(
+		H::each(
+			array('Zero', 'One'),
+			$li
+		),
+		H::each(
+			array('Three', 'Four'),
+			$li
+		)
+	);
+	echo $a;
+	// Gives you: <OL><LI>Zero</LI><LI>One</LI><LI>Three</LI><LI>Four</LI></OL>
+
+
 Validator class
 ----
 

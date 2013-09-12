@@ -38,6 +38,9 @@ class H {
 		elseif ($name == 'children') return $this->_children;
 		elseif ($name == 'attributes') return $this->_attributes;
 	}
+	// TODO
+	public function __clone() {
+	}
 
 	public function attribute($name, $value) {
 		$this->_attributes[ $name ] = $value;
@@ -74,6 +77,16 @@ class H {
 		$a = new HInput(__METHOD__, func_get_args());
 		$a->_short = false;
 		return $a;
+	}
+
+	// Experimental ... looping
+	public static function each($rows, $tree) {
+		$a = H::eachElse($rows, $tree);
+		return H::eachElse($rows, $tree);
+	}
+	public static function eachElse($rows, $tree, $alternate = null) {
+		if (!$rows) return $alternate;
+		return new T($rows, $tree);
 	}
 }
 
@@ -118,65 +131,54 @@ class HSelect extends HInput {
 		return $this;
 	}
 
+
 }
 
-/*
 // Templating ... for looping
 class T {
-	protected static $single;
-	protected static $key;
-	protected static $value;
+	protected $rows;
+	public static $key;
+	public static $value;
+
+	public function __construct($rows, $tree) {
+		$this->rows = $rows;
+		$this->tree = $tree;
+	}
 
 	public function __toString() {
 		$out = '';
-		foreach ($rows as T::$key => T::$value) {
+		foreach ($this->rows as T::$key => T::$value) {
 			// Evaluate the tree now. Wish there was a way I could lazy eval this, but I think not
 			// Unless key() and value() return an instance of a class that simply holds the value of $key or $value
 			// But then I'd need some way to push the next statement as a child to the parent containing the loop.
-			$out .= $tree;
+			$out .= $this->tree;
 		}
 		return $out;
 	}
 
-	public static function each($rows, $tree) {
-		return T::eachElse($rows, $tree);
-	}
-	public static function eachElse($rows, $tree, $alternate = null) {
-		if (!$rows) return $alternate;
-		if (!T::$single) {
-			T::$single = new T();
-		}
-		return T::$single;
-	}
 	public static function key() {
 		return new Tvalue( T::$key );
 	}
 	public static function value() {
-		return T::$value;
+		return new Tvalue( T::$value );
+	}
+}
+class Tkey {
+	public function __toString() {
+		return T::$key;
 	}
 }
 class Tvalue {
+	public function __toString() {
+		return T::$value;
+	}
 }
-*/
 
 /*
 $a = H::div(
 	H::div(
 		"hey"
 	)->class('boo hiss')->attribute('data-for', 'hey"sucka"')
-);
-echo $a;
-*/
-
-/*
-
-$a = H::ol(
-	T::each(
-		array('Zero', 'One'),
-		H::li(
-			T::value()
-		)
-	)
 );
 echo $a;
 */
