@@ -5,6 +5,7 @@ require('../H.php');
 // echo H::div();
 
 $lis = H::li(
+	// Maybe T::value() should accept a closure ... but would that be overkill
 	T::value()
 );
 
