@@ -120,6 +120,7 @@ class HSelect extends HInput {
 
 }
 
+/*
 // Templating ... for looping
 class T {
 	protected static $single;
@@ -142,8 +143,6 @@ class T {
 	}
 	public static function eachElse($rows, $tree, $alternate = null) {
 		if (!$rows) return $alternate;
-var_dump($tree);
-exit;
 		if (!T::$single) {
 			T::$single = new T();
 		}
@@ -158,7 +157,7 @@ exit;
 }
 class Tvalue {
 }
-class 
+*/
 
 /*
 $a = H::div(
@@ -169,6 +168,8 @@ $a = H::div(
 echo $a;
 */
 
+/*
+
 $a = H::ol(
 	T::each(
 		array('Zero', 'One'),
@@ -178,3 +179,4 @@ $a = H::ol(
 	)
 );
 echo $a;
+*/
