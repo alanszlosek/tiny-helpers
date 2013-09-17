@@ -17,11 +17,9 @@ class H {
 		}
 		$out .= '>';
 		foreach ($this->_children as $child) {
-			/*
-			if ($child instanceof H) $out .= $child->__toString();
+			if ($child instanceof H) $out .= $child; //->__toString();
 			else $out .= htmlentities($child);
-			*/
-			$out .= $child;
+			//$out .= $child;
 		}
 		$out .= '</' . $this->_tag . '>';
 		return $out;
