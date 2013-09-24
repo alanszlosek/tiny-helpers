@@ -55,12 +55,12 @@ class Validator {
 	}
 	
 	// Does the work of traversing the field name tree
-	public function Validate($data, $fallback) {
+	public function Validate($data, $fallback = array()) {
 		$this->Errors = array();
 		return $this->ValidateRecursive($this->tree, $data, $fallback);
 	}
 	
-	protected function ValidateRecursive($tree, $data, $fallback) {
+	protected function ValidateRecursive($tree, $data, $fallback = array()) {
 		$out = array();
 		foreach ($tree as $key => $value) {
 			if ($value instanceof V) {
@@ -71,21 +71,31 @@ class Validator {
 				if (!array_key_exists($key, $data)) {
 					// Does the validation rule allow the key to be non-existent?
 					if ($value->_nullOk) continue;
-					$a = $value->Valid($data[ $key ]);
+					// Try validation against null
+					$a = $value->Valid(null); //$data[ $key ]);
 					if ($a === false) {
 						$message = $value->Message();
 						if ($message) $this->Errors[] = $message;
 						else $this->Errors[] = 'There were errors';
-						$out[ $key ] = $fallback[ $key ];
+						if (array_key_exists($key, $fallback)) {
+							$out[ $key ] = $fallback[ $key ];
+						}
 					} else $out[ $key ] = $a;
 					continue;
 				}
+				/*
+				Same as above, but I feel I can roll the fallback into the Valid() call,
+				since Choice accepts a default value. But default and initial values ... confusing how they interact with
+				one-another.
+				*/
 				$a = $value->Valid($data[ $key ]);
 				if ($a === false) {
 					$message = $value->Message();
 					if ($message) $this->Errors[] = $message;
 					else $this->Errors[] = 'There were errors';
-					$out[ $key ] = $fallback[ $key ];
+					if (array_key_exists($key, $fallback)) {
+						$out[ $key ] = $fallback[ $key ];
+					}
 				} else $out[ $key ] = $a;
 			} elseif ($value === true) {
 				// copy out ... no validation necessary
