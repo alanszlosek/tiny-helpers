@@ -4,7 +4,8 @@ Extreme work in progress. The goal is to allow you to:
 
 * Construct a validation hierarchy (with error messages) matching the POST data that you want to process
 * Call a method to validate against said POST data
-* Request the error messages
+* Valid values will be returned (using initial values, or default if specified)
+* Check whether errors were generated during validation, and display them how you want
 
 */
 /*
@@ -18,9 +19,12 @@ $fields = array(
 	)
 );
 
-*/
-/*
-Ideas for updates:
+REGARDING INITIAL VALUES AND FALLBACKS/DEFAULTS:
+
+Torn. I'd like to specify default when you specify the rule/pattern/choice/etc. But what does that do to the initial values? Should we also validate the initial values to ensure they're still valid? If a default is specified, I'm thinking it should NOT be validated.
+
+
+IDEAS FOR UPDATES:
 
 - be more specific with API: call sanitizations methods what they are, and validation as well
 	- Sanitize::Markup()
