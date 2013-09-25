@@ -1,23 +1,30 @@
 <?php
 /*
-Extreme work in progress. The goal is to allow you to:
+How to Use (WIP)
+====
 
 * Construct a validation hierarchy (with error messages) matching the POST data that you want to process
 * Call a method to validate against said POST data
 * Valid values will be returned (using initial values, or default if specified)
 * Check whether errors were generated during validation, and display them how you want
 
-*/
-/*
-Want this to work through a hierarchy, to process a whole post.
+Features
+====
 
-$fields = array(
-	'strings' => array(
-		'en' => array(
-			'hash1' => Validation::Pattern(
+Supports POST with data in nested associative arrays
+
+	$fields = array(
+		'strings' => array(
+			'en' => array(
+				'choice' => Validation::Choice(array('one','two'))
+			)
 		)
-	)
-);
+	);
+
+*/
+
+/*
+
 
 REGARDING INITIAL VALUES AND FALLBACKS/DEFAULTS:
 
@@ -37,16 +44,7 @@ IDEAS FOR UPDATES:
 
 // recursively visits all values, constructs an identically nested structure
 // with an error array at the top level
-class Validator {
-	protected $tree;
-	
-	public $Errors;
-	
-	// Takes a validation tree
-	public function __construct($tree) {
-		$this->tree = $tree;
-		$this->Errors = array();
-	}
+class Validate {
 	
 	public static function Pattern($pattern) {
 		return new VPattern($pattern);
@@ -57,13 +55,18 @@ class Validator {
 	public static function Dollar() {
 		return new VPattern('/^([0-9]+.)?[0-9]+$/');
 	}
+}
+
+class Validator {
+	protected $rules;
+	protected $out;
+	public $Errors = array();
 	
-	// Does the work of traversing the field name tree
-	public function Validate($data, $fallback = array()) {
-		$this->Errors = array();
-		return $this->ValidateRecursive($this->tree, $data, $fallback);
+	// Takes a validation tree
+	public function __construct($rules, $data, $fallback = array()) {
+		$this->ValidateRecursive($rules, $data, $fallback);
 	}
-	
+
 	protected function ValidateRecursive($tree, $data, $fallback = array()) {
 		$out = array();
 		foreach ($tree as $key => $value) {
@@ -109,11 +112,16 @@ class Validator {
 				$out[ $key ] = $this->ValidateRecursive($value, $data[ $key ], $fallback[ $key ]);
 			}
 		}
+		$this->out = $out;
 		return $out;
+	}
+
+	public function Validated() {
+		return $this->out;
 	}
 }
 
-class V {
+abstract class V {
 	public $_nullOk = false;
 	protected $message = '';
 	

@@ -1,13 +1,13 @@
 <?php
 
-require('../Validator.php');
+require('../Validation.php');
 
-class ValidatorTests extends PHPUnit_Framework_TestCase {
+class ValidationTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
 
 		$rules = array(
-			'not-empty' => Validator::Pattern('/^.+$/'),
-                        'not-empty-message' => Validator::Pattern('/^.+$/')->Message('Name is required'),
+			'not-empty' => Validate::Pattern('/^.+$/'),
+                        'not-empty-message' => Validate::Pattern('/^.+$/')->Message('Name is required'),
 		);
 		$_POST = array(
 			'not-empty' => '',
@@ -20,8 +20,8 @@ class ValidatorTests extends PHPUnit_Framework_TestCase {
 			//'not-empty-message' => ''
 		);
 		
-		$validator = new Validator($rules);
-		$values = $validator->Validate($_POST, $initialValues); // With fallback values
+		$validator = new Validator($rules, $_POST, $initialValues);
+		$values = $validator->Validated();
 
 		$errors = array(
 			'There were errors',
@@ -40,17 +40,17 @@ class ValidatorTests extends PHPUnit_Framework_TestCase {
 	public function testChoices() {
 		$rules = array(
 			// POST won't have this field
-			'null-test1' => Validator::Choice(array(null, 'A')),
+			'null-test1' => Validate::Choice(array(null, 'A')),
 			// POST will have field, but it'll be null
-			'null-test2' => Validator::Choice(array(null, 'A')),
+			'null-test2' => Validate::Choice(array(null, 'A')),
 			// POST won't have this field
-			'test1' => Validator::Choice(array('A', 'B')),
+			'test1' => Validate::Choice(array('A', 'B')),
 			// POST will have A for this field
-			'test2' => Validator::Choice(array('A', 'B')),
+			'test2' => Validate::Choice(array('A', 'B')),
 			// POST won't have this field, and it has a default
-			'test3' => Validator::Choice(array('C', 'D'), 'E'),
+			'test3' => Validate::Choice(array('C', 'D'), 'E'),
 			// POST will have this field, but with invalid value, and a default specified
-			'test4' => Validator::Choice(array('C', 'D'), 'E'),
+			'test4' => Validate::Choice(array('C', 'D'), 'E'),
 		);
 		$_POST = array(
 			'null-test2' => null,
@@ -58,9 +58,8 @@ class ValidatorTests extends PHPUnit_Framework_TestCase {
 			'test4' => 'A'
 		);
 
-		$validator = new Validator($rules);
-		// Output will contain permitted values
-		$values = $validator->Validate($_POST);
+		$validator = new Validator($rules, $_POST);
+		$values = $validator->Validated();
 
 		$errors = array();
 		$this->assertEquals($errors, $validator->Errors);

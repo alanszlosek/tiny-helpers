@@ -1,6 +1,8 @@
 Hi There
 ====
 
+The goal is to create standalone classes that play well with your in-house framework, spaghetti code, etc.
+
 H class
 ----
 
