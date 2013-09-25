@@ -58,61 +58,45 @@ class Validate {
 }
 
 class Validator {
-	protected $_out;
+	protected $_validated;
 	protected $_errors = array();
 	protected $_errorsByField = array();
 	
 	// Takes a validation tree
-	public function __construct($rules, $data, $fallback = array()) {
-		$this->ValidateRecursive($rules, $data, $fallback, true);
+	public function __construct($rules, $data) {
+		$this->ValidateRecursive($rules, $data, true);
 	}
 
-	protected function ValidateRecursive($tree, $data, $fallback = array(), $first = false) {
+	protected function ValidateRecursive($tree, $data, $first = false) {
 		$out = array();
 		$errors = array();
 		foreach ($tree as $key => $value) {
 			if ($value instanceof V) {
-				/*
-				return value should be sanitized value, ready to be filled into form,
-				or false, indicating an error
-				*/
-				if (!array_key_exists($key, $data)) {
-					// Try validation against null
-					$a = $value->IsValid(null); //$data[ $key ]);
-					if ($a === false) {
-						$this->_errors[] = $errors[$key][] = $value->Message();
-						if (array_key_exists($key, $fallback)) {
-							$out[ $key ] = $fallback[ $key ];
-						}
-					} else $out[ $key ] = $a;
-					continue;
-				}
-				/*
-				Same as above, but I feel I can roll the fallback into the Valid() call,
-				since Choice accepts a default value. But default and initial values ... confusing how they interact with
-				one-another.
-				*/
-				$a = $value->IsValid($data[ $key ]);
+				$input = (array_key_exists($key, $data) ? $data[$key] : null);
+				$a = $value->IsValid($input);
 				if ($a === false) {
 					$this->_errors[] = $errors[$key][] = $value->Message();
-					if (array_key_exists($key, $fallback)) {
-						$out[ $key ] = $fallback[ $key ];
-					}
-				} else $out[ $key ] = $a;
+				} else {
+					// We only push valid values to output
+					$out[ $key ] = $a;
+				}
+
 			} elseif ($value === true) {
 				// copy out ... no validation necessary
 				$out[ $key ] = $data[ $key ];
+
 			} else {
-				// What if data key no exist?
-				$ret = $this->ValidateRecursive($value, $data[ $key ], $fallback[ $key ]);
+				$ret = $this->ValidateRecursive($value, $data[ $key ]);
 				$out[ $key ] = $ret[0];
 				$errors[ $key ] = $ret[1];
 			}
 		}
 		if ($first) {
-			$this->_out = $out;
+			$this->_validated = $out;
 			$this->_errorsByField = $errors;
 		}
+		// Hack to return 2 values
+		// So we can build up valid output data AND errors while recursing.
 		return array($out, $errors);
 	}
 
@@ -122,8 +106,9 @@ class Validator {
 	public function ErrorsByField() {
 		return $this->_errorsByField;
 	}
-	public function Validated() {
-		return $this->_out;
+	public function Validated($fallbacks = array()) {
+		if ($fallbacks) return array_merge_recursive($fallbacks, $this->_validated);
+		return $this->_validated;
 	}
 }
 

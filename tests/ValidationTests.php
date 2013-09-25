@@ -14,14 +14,7 @@ class ValidationTests extends PHPUnit_Framework_TestCase {
 			//'not-empty-message' => ''
 		);
 
-		// Fall back to these if there's an error
-		$initialValues = array(
-			'not-empty' => '',
-			//'not-empty-message' => ''
-		);
-		
-		$validator = new Validator($rules, $_POST, $initialValues);
-		$values = $validator->Validated();
+		$validator = new Validator($rules, $_POST);
 
 		$errors = array(
 			'There were errors',
@@ -29,7 +22,11 @@ class ValidationTests extends PHPUnit_Framework_TestCase {
 		);
 		$this->assertEquals($errors, $validator->Errors());
 
-		// Fallback only spedified for 1 field
+		// Fall back to these if there's an error ... they should get squashed if a field passes validation
+		$initialValues = array(
+			'not-empty' => '',
+		);
+		$values = $validator->Validated($initialValues);
 		$values2 = array(
 			'not-empty' => '',
 		);
@@ -80,6 +77,51 @@ class ValidationTests extends PHPUnit_Framework_TestCase {
 		);
 		$this->assertEquals($values2, $values);
 		
+	}
+
+	public function testNested() {
+		$rules = array(
+			'strings' => array(
+				'en' => array(
+					'title' => Validate::Choice(array('one', 'two')),
+					'summary' => true
+				),
+				'es' => array(
+					'title' => Validate::Choice(array('one', 'two'))
+				)
+			)
+		);
+		$_POST = array(
+			'strings' => array(
+				'en' => array(
+					'title' => 'four',
+					'summary' => 'Test'
+				),
+				'es' => array(
+					'title' => 'three'
+				)
+			)
+		);
+
+		$validator = new Validator($rules, $_POST);
+
+		$errors = array(
+			'There were errors',
+			'There were errors',
+		);
+		$this->assertEquals($errors, $validator->Errors());
+		
+		$values = array(
+			'strings' => array(
+				'en' => array(
+					'summary' => 'Test'
+				),
+				'es' => array(
+				)
+			)
+		);
+		$this->assertEquals($values, $validator->Validated());
+
 	}
 }
 
