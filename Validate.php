@@ -58,17 +58,18 @@ class Validate {
 }
 
 class Validator {
-	protected $rules;
-	protected $out;
-	public $Errors = array();
+	protected $_out;
+	protected $_errors = array();
+	protected $_errorsByField = array();
 	
 	// Takes a validation tree
 	public function __construct($rules, $data, $fallback = array()) {
-		$this->ValidateRecursive($rules, $data, $fallback);
+		$this->ValidateRecursive($rules, $data, $fallback, true);
 	}
 
-	protected function ValidateRecursive($tree, $data, $fallback = array()) {
+	protected function ValidateRecursive($tree, $data, $fallback = array(), $first = false) {
 		$out = array();
+		$errors = array();
 		foreach ($tree as $key => $value) {
 			if ($value instanceof V) {
 				/*
@@ -76,14 +77,10 @@ class Validator {
 				or false, indicating an error
 				*/
 				if (!array_key_exists($key, $data)) {
-					// Does the validation rule allow the key to be non-existent?
-					if ($value->_nullOk) continue;
 					// Try validation against null
-					$a = $value->Valid(null); //$data[ $key ]);
+					$a = $value->IsValid(null); //$data[ $key ]);
 					if ($a === false) {
-						$message = $value->Message();
-						if ($message) $this->Errors[] = $message;
-						else $this->Errors[] = 'There were errors';
+						$this->_errors[] = $errors[$key][] = $value->Message();
 						if (array_key_exists($key, $fallback)) {
 							$out[ $key ] = $fallback[ $key ];
 						}
@@ -95,11 +92,9 @@ class Validator {
 				since Choice accepts a default value. But default and initial values ... confusing how they interact with
 				one-another.
 				*/
-				$a = $value->Valid($data[ $key ]);
+				$a = $value->IsValid($data[ $key ]);
 				if ($a === false) {
-					$message = $value->Message();
-					if ($message) $this->Errors[] = $message;
-					else $this->Errors[] = 'There were errors';
+					$this->_errors[] = $errors[$key][] = $value->Message();
 					if (array_key_exists($key, $fallback)) {
 						$out[ $key ] = $fallback[ $key ];
 					}
@@ -109,29 +104,36 @@ class Validator {
 				$out[ $key ] = $data[ $key ];
 			} else {
 				// What if data key no exist?
-				$out[ $key ] = $this->ValidateRecursive($value, $data[ $key ], $fallback[ $key ]);
+				$ret = $this->ValidateRecursive($value, $data[ $key ], $fallback[ $key ]);
+				$out[ $key ] = $ret[0];
+				$errors[ $key ] = $ret[1];
 			}
 		}
-		$this->out = $out;
-		return $out;
+		if ($first) {
+			$this->_out = $out;
+			$this->_errorsByField = $errors;
+		}
+		return array($out, $errors);
 	}
 
+	public function Errors() {
+		return $this->_errors;
+	}
+	public function ErrorsByField() {
+		return $this->_errorsByField;
+	}
 	public function Validated() {
-		return $this->out;
+		return $this->_out;
 	}
 }
 
 abstract class V {
-	public $_nullOk = false;
-	protected $message = '';
-	
-	public function NullOk($bool = true) {
-		$this->_nullOk = $bool;
-		return $this;
-	}
+	protected $message = 'There were errors';
+	protected $_trim = false;
 	
 	public function Trim($bool) {
 		$this->_trim = $bool;
+		return $this;
 	}
 	
 	public function Message($m = null) {
@@ -139,6 +141,9 @@ abstract class V {
 		$this->message = $m;
 		return $this;
 	}
+
+	// Implement this
+	public abstract function IsValid($value);
 }
 
 class VPattern extends V {
@@ -147,7 +152,7 @@ class VPattern extends V {
 		$this->pattern = $p;
 	}
 	// multiple values?
-	public function Valid($value) {
+	public function IsValid($value) {
 		if (preg_match($this->pattern, $value) == 0) {
 			return false;
 		}
@@ -157,14 +162,19 @@ class VPattern extends V {
 
 class VChoice extends V {
 	protected $choices = array();
+	/*
+	Since the goal of this class is to validate textual input, null doesn't make sense.
+	If default is null, then no default has been specified.
+	*/
 	protected $default = null;
 	public function __construct($choices = array(), $default = null) {
 		$this->choices = $choices;
 		$this->default = $default;
 	}
 	
-	public function Valid($value) {
+	public function IsValid($value) {
 		if (in_array($value, $this->choices)) return $value;
+		if ($this->default === null) return false;
 		return $this->default;
 	}
 }

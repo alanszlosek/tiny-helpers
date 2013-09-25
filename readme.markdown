@@ -35,7 +35,7 @@ Experimental looping support:
 	// Gives you: <OL><LI>Zero</LI><LI>One</LI><LI>Three</LI><LI>Four</LI></OL>
 
 
-Validator class
+Validate class
 ----
 
 Perhaps you want to validate POST data (maybe you have nest fields with names like "product[1][name]"). Perhaps you need it to play nice with your existing framework or legacy code. Maybe you want the power to construct your own validation functions or regex patters. In that case, Validator is for you.
