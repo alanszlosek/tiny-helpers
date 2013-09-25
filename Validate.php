@@ -4,9 +4,9 @@ How to Use (WIP)
 ====
 
 * Construct a validation hierarchy (with error messages) matching the POST data that you want to process
-* Call a method to validate against said POST data
-* Valid values will be returned (using initial values, or default if specified)
-* Check whether errors were generated during validation, and display them how you want
+* Create a Validator class, passing rules and POST data
+* Call Validated() to get valid values, optionally passing an array of fallback values
+* Call Errors() or ErrorsByField() get errors, and display them how you want
 
 Features
 ====
@@ -68,8 +68,8 @@ class Validator {
 	}
 
 	protected function ValidateRecursive($tree, $data, $first = false) {
-		$out = array();
-		$errors = array();
+		$out = array(); // Holds valid data
+		$errors = array(); // Holds errors, indexed by field
 		foreach ($tree as $key => $value) {
 			if ($value instanceof V) {
 				$input = (array_key_exists($key, $data) ? $data[$key] : null);
@@ -164,30 +164,3 @@ class VChoice extends V {
 	}
 }
 
-/*
-class Field {
-	public function Error() {
-		echo 'Error';
-	}
-}
-
-$field = new Field();
-
-$tree = array(
-	'strings' => array(
-		'en' => array(
-			// probably should be able to point this at an object to alert about an error
-			'hash1' => Validation::Pattern('/^ey/', $field)
-		)
-	)
-);
-$data = array(
-	'strings' => array(
-		'en' => array(
-			'hash1' => 'Hey'
-		)
-	)
-);
-
-$errors = Validator::Validate($tree, $data);
-*/

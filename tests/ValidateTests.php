@@ -2,7 +2,7 @@
 
 require('../Validate.php');
 
-class ValidationTests extends PHPUnit_Framework_TestCase {
+class ValidateTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
 
 		$rules = array(
@@ -84,6 +84,7 @@ class ValidationTests extends PHPUnit_Framework_TestCase {
 			'strings' => array(
 				'en' => array(
 					'title' => Validate::Choice(array('one', 'two')),
+					// Pass-through rule ... all input data is valid
 					'summary' => true
 				),
 				'es' => array(
