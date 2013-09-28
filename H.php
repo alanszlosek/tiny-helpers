@@ -1,4 +1,9 @@
 <?php
+/*
+H - Sometimes you need to build HTML via code
+
+MIT Licensed. See LICENSE.txt for details.
+*/
 class H {
 	protected $_tag;
 	protected $_attributes = array();
@@ -6,7 +11,6 @@ class H {
 	public function __construct($tag, $children = array()) {
 		$this->_tag = strtoupper(substr($tag, 3));
 		$this->_children = $children;
-		$this->_attributes = array();
 	}
 
 	public function __toString() {
@@ -26,16 +30,8 @@ class H {
 	}
 	public function __call($name, $args) {
 		return $this->attribute($name, $args[0]);
-		return $this;
 	}
-	public function __set($name, $value) {
-		$this->attribute($name, $value);
-	}
-	public function __get($name) {
-		if ($name == 'tag') return $this->_tag;
-		elseif ($name == 'children') return $this->_children;
-		elseif ($name == 'attributes') return $this->_attributes;
-	}
+ 
 	// TODO
 	public function __clone() {
 	}
@@ -55,11 +51,14 @@ class H {
 		return $this;
 	}
 
+	// STATIC METHODS
+
 	public static function __callStatic($name, $arguments) {
 		$name = strtolower($name);
 		$tags = explode(',', 'a,br,button,div,em,fieldset,form,img,label,legend,li,ol,option,p,span,strong,submit,td,th,tr,ul');
 		if (in_array($name, $tags)) return new H('H::' . $name, $arguments);
 		// What if it's an unsupported tag?
+		return null;
 	}
 
 	// Special cases
@@ -72,14 +71,11 @@ class H {
 	}
 
 	public static function textarea() {
-		$a = new HInput(__METHOD__, func_get_args());
-		$a->_short = false;
-		return $a;
+		return new HInput(__METHOD__, func_get_args());
 	}
 
 	// Experimental ... looping
 	public static function each($rows, $tree) {
-		$a = H::eachElse($rows, $tree);
 		return H::eachElse($rows, $tree);
 	}
 	public static function eachElse($rows, $tree, $alternate = null) {
@@ -90,6 +86,10 @@ class H {
 
 // These are intended to be private. Don't instantiate them directly
 class HInput extends H {
+	// Defaults to text input type
+	protected $_attributes = array(
+		'type' => 'text'
+	);
 	//  Support for array names for form fields
 	// customer[123][name]
 	// name('customer', '123', 'name')
@@ -104,16 +104,18 @@ class HInput extends H {
 }
 
 class HSelect extends HInput {
+	protected $_attributes = array();
 	protected $_options = array();
 	protected $_value;
 
+	// But what if we already set children?
 	public function __toString() {
 		// Prepare children
-		$this->_children = array();
 		foreach ($this->_options as $key => $value) {
-			$child = H::option(
-				$value
-			)->value($key);
+			// DOing the following causes strange problems
+			// $child = H::option($value);
+			$child = new H('H::option', array($value));
+			$child->value($key);
 			if ($this->_value == $key) $child->selected('selected');
 			$this->_children[] = $child;
 		}
