@@ -3,6 +3,12 @@
 require('../H.php');
 
 class HTests extends PHPUnit_Framework_TestCase {
+	protected function common($a, $b) {
+		foreach ($a as $i => $item) {
+			$this->assertEquals($item, '' . $b[ $i ]);
+		}
+
+	}
 
 	public function testSimple() {
 		// markup
@@ -22,13 +28,6 @@ class HTests extends PHPUnit_Framework_TestCase {
 			H::div()->class('a')->children(array( H::p('test') ))
 		);
 		$this->common($a, $b);
-	}
-
-	protected function common($a, $b) {
-		foreach ($a as $i => $item) {
-			$this->assertEquals($item, '' . $b[ $i ]);
-		}
-
 	}
 
 	public function testFormInputs() {

@@ -34,6 +34,16 @@ Experimental looping support:
 	echo $a;
 	// Gives you: <OL><LI>Zero</LI><LI>One</LI><LI>Three</LI><LI>Four</LI></OL>
 
+Form fields:
+
+	$expression = true;
+	$options = array(
+		'a' => 'A',
+		'b' => 'B'
+	);
+	echo H::input()->type('checkbox')->name('active')->value(1)->attributeIf('checked', 'checked', $expression);
+	echo H::select()->name('choice')->value('b')->options($options);
+
 
 Validate class
 ----
