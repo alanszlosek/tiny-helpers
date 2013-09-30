@@ -36,10 +36,11 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'categories' => '404',
 			'categories/123' => '404',
 			'categories/123/edit' => 'categories 123 edit',
-			'categories/create' => 'create category'
+			'categories/123/move' => '404',
+			'categories/create' => 'create category',
+			'categories/all' => '404',
 		);
 
-		$path = 'test';
 		$r = new Route($r, $fourZeroFour);
 
 		foreach ($paths as $path => $output) {
@@ -51,6 +52,8 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 
 
 class Controller {
+	// If the controller method doesn't exists, here's our fallback
+	// It simply returns the folder names
 	public function __call($name, $args) {
 		return implode(' ', $args[0]);
 	}
