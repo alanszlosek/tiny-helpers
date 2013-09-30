@@ -4,24 +4,38 @@ Route - standalone routing engine to dispatch to your controller class methods
 Licensed under MIT. See LICENSE.txt for details.
 https://github.com/alanszlosek/tiny-helpers
 
-Routes look like this:
+EXAMPLE
 
-// No slashes in array keys. This expects that you split on forward slashes,
-// When you dispatch, you pass an array of folder names from the URL
+Url: http://abc.com/category/123?offset=2
+
+Make your routes data structure:
+
 $routes = array(
-	'help' => array(
-		'contact' => Route::To('ContactController', 'contact'),
-	),
-	'order' => array(
-		// An internal alias ... Modify Route and make your own if you need regex patterns
-		':integer' => Route::To('OrderController', 'byId'),
+	'category' => array(
+		// :integer is an internal alias that matches integers
+		// $path array will be passed to OrderController constructor
+		// byId() will be called with an object that looks like this JSON: {id:123}
+		':integer' => Route::To('OrderController', 'byId', '//id'),
 	),
 );
+
+Do the following to your request URL:
+
+* Remove domain
+* Remove leading slash
+* Remove query string
+* Split folder path into an array
+
+Now, dispatch:
+
+$path = array('category','123');
+$router = new Route($routes);
+// dispatch() returns whatever your controller method returns
+echo $router->dispatch($path);
 */
 
 
 /**
- * I know regex would be more powerful, but I figured if you needed more complex matching, you could create more fallbacks
  * Not sure how or whether this should address GET vs POST
  */
 
@@ -83,22 +97,35 @@ class Route {
 	/**
 	 * Use this within your routes data structure
 	 */
-	public static function To($class, $method) {
-		return new RouteTo($class, $method);
+	public static function To($class, $method, $namings = null) {
+		return new RouteTo($class, $method, $namings);
 	}
 }
 class RouteTo {
 	protected $class;
 	protected $method;
-	public function __construct($class, $method) {
+	protected $namings;
+	public function __construct($class, $method, $namings = null) {
 		$this->class = $class;
 		$this->method = $method;
+		$this->namings = $namings;
 	}
 	public function dispatch($path) {
 		$class = $this->class;
 		$method = $this->method;
-		$c = new $class();
-		return $c->$method($path);
+		if (!is_object($class)) { // If we were given a class name, instead of an instance
+			$c = new $class($path);
+		}
+		$named = null;
+		if ($this->namings) {
+			$named = new stdClass();
+			$namings = explode('/', substr($this->namings, 1)); // Remove leading slash
+			foreach ($namings as $i => $name) {
+				if (!$name) continue;
+				$named->$name = $path[ $i ];
+			}
+		}
+		return $c->$method($named);
 	}
 }
 
