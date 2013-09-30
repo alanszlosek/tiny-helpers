@@ -11,22 +11,24 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
 		$r = array(
-			'"' => $fallback,
+			':string' => $fallback,
 			'test' => Route::To('TestController', 'test'),
 			'tests' => array(
-				'#' => Route::To('TestController', 'id'),
+				':integer' => Route::To('TestController', 'id'),
 			),
 			'fallback' => $fallback,
 			'categories' => array(
-				'#' => array(
+				':root' => Route::To('CategoryController', 'listing'),
+				':integer' => array(
+					':root' => Route::To('CategoryController', 'view'),
 					'edit' => Route::To('CategoryController', 'edit'),
 				),
 				'create' => Route::To('CategoryController', 'create'),
 			)
 		);
 		$paths = array(
-			'fall/back' => 'fall back',
-			'test' => 'testing',
+			'fall/back/' => 'fall back ', // intentional trailing space
+			'test/' => 'testing',
 			'tests/123' => 'id: 123',
 			'tests/404path' => '404',
 			'tests/string' => '404',
@@ -34,10 +36,12 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'123' => '123', // there's a string catch-all, which 123 will match
 
 			'categories' => '404',
+			'categories/' => 'list categories',
 			'categories/123' => '404',
+			'categories/123/' => 'show category',
 			'categories/123/edit' => 'categories 123 edit',
 			'categories/123/move' => '404',
-			'categories/create' => 'create category',
+			'categories/create' => 'category creation',
 			'categories/all' => '404',
 		);
 
@@ -75,7 +79,13 @@ class TestController extends Controller {
 }
 class CategoryController extends Controller {
 	public function create($path) {
-		return 'create category';
+		return 'category creation';
+	}
+	public function listing($path) {
+		return 'list categories';
+	}
+	public function view($path) {
+		return 'show category';
 	}
 }
 

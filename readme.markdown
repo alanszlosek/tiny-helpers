@@ -1,7 +1,44 @@
 Hi There
 ====
 
-The goal is to create standalone classes that play well with your in-house framework, spaghetti code, etc.
+These are standalone classes that play well with your in-house framework, spaghetti code, etc. So far we have:
+
+* Routing engine (Route)
+* Incremental markup builder with HTML special character preparation (H)
+* Input validator that works on deeply nested arrays of data
+
+Route class
+----
+
+Usage:
+
+	// Split your request path. http://abc.com/category/123 should be:
+	$path = array('category', '123');
+	// Set up your routing structure, specifying which classes should be
+	// instantiated, and which method to call. The method will be passed $path
+	// as the first parameter, modify Route if you need something different
+	$routes = array(
+		'help' => array(
+			'contact' => Route::To('ContactController', 'contact'),
+		),
+		'order' => array(
+			// Path: /order/123/
+			// An internal alias ... Modify Route and make your own if you need regex patterns
+			':integer' => Route::To('OrderController', 'byId'),
+		),
+		'orders' => array(
+			// Path: /orders/
+			'' => Route::To('OrderController', 'listing'),
+			'
+		)
+	);
+	$router = new Route($routes);
+	
+	// dispatch() returns whatever your controller method returns
+	echo $router->dispatch($path);
+
+See the unit tests for a more complex example.
+
 
 H class
 ----
