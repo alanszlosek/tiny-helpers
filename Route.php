@@ -6,7 +6,7 @@ https://github.com/alanszlosek/tiny-helpers
 
 EXAMPLE
 
-Url: http://abc.com/category/123?offset=2
+Url: http://abc.com/category/123/?offset=2
 
 Make your routes data structure:
 
@@ -19,16 +19,12 @@ $routes = array(
 	),
 );
 
-Do the following to your request URL:
+You should only pass the path portion of your URL to dispatch. Without the scheme, domain or query string.
+Ensure no repeat slashes (/categories//something///) before calling dispatch().
 
-* Remove domain
-* Remove leading slash
-* Remove query string
-* Split folder path into an array
+Now dispatch:
 
-Now, dispatch:
-
-$path = array('category','123');
+$path = "/category/123/";
 $router = new Route($routes);
 // dispatch() returns whatever your controller method returns
 echo $router->dispatch($path);
@@ -56,7 +52,8 @@ class Route {
 	public function dispatch($path, $routes = array()) {
 		// First run
 		if (!$routes) {
-			$this->path = $path;
+			$this->path = explode('/', trim($path, '/'));
+			$path = $this->path;
 			$routes = $this->routes;
 		}
 

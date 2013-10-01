@@ -61,7 +61,7 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 
 		foreach ($paths as $path => $output) {
 			// Remove leading and trailing forward-slash
-			$this->assertEquals($output, $r->dispatch(explode('/', trim($path, '/'))));
+			$this->assertEquals($output, $r->dispatch($path));
 		}
 	}
 }
