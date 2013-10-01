@@ -38,28 +38,30 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'/parent/child/grandchild' => 'parent child grandchild',
 
 
-			'/categories' => '404',
+			'/categories' => 'list categories',
 			'/categories/' => 'list categories',
 			'/categories/all' => '404',
+			'/categories/all/' => '404',
 			'/categories/create' => 'category creation',
-			'/categories/123' => '404',
+			'/categories/create/' => 'category creation',
+			'/categories/123' => 'show category 123',
 			'/categories/123/' => 'show category 123',
 			'/categories/123/edit' => 'edit category 123',
 			'/categories/123/move' => '404',
 
 			// Test 404
 			// tests doesn't exist, should it fallback or 404?
-/*
+			/*
 			'/tests/404path' => '404',
 			'/tests/string' => '404',
-*/
+			*/
 		);
 
 		$r = new Route($r, $fourZeroFour);
 
 		foreach ($paths as $path => $output) {
-			$path = substr($path, 1); // remove leading forward-slash
-			$this->assertEquals($output, $r->dispatch(explode('/', $path)));
+			// Remove leading and trailing forward-slash
+			$this->assertEquals($output, $r->dispatch(explode('/', trim($path, '/'))));
 		}
 	}
 }

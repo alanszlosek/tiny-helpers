@@ -77,12 +77,12 @@ class Route {
 			// Boom
 
 		*/
-		} elseif (array_key_exists(':root', $routes) && $part == '') {
+		} elseif (array_key_exists(':root', $routes) && !$part) {
 			$route = $routes[':root'];
 		}
 
 		// If $route is an array, then we haven't found a dispatch destination yet
-		if (is_array($route) && $path) { // more nesting to do, more path to consume
+		if (is_array($route)) { // more nesting to do, more path to consume
 			return $this->dispatch($path, $route);
 		} elseif ($route instanceof RouteTo) {
 			// Run the controller
