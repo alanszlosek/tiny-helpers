@@ -112,16 +112,27 @@ class ValidateTests extends PHPUnit_Framework_TestCase {
 		);
 		$this->assertEquals($errors, $validator->Errors());
 		
+		$fallback = array(
+			'strings' => array(
+				'en' => array(
+					'summary' => 'Old Summary'
+				),
+				'es' => array(
+					'summary' => 'Spanish'
+				),
+			)
+		);
 		$values = array(
 			'strings' => array(
 				'en' => array(
 					'summary' => 'Test'
 				),
 				'es' => array(
+					'summary' => 'Spanish'
 				)
 			)
 		);
-		$this->assertEquals($values, $validator->Validated());
+		$this->assertEquals($values, $validator->Validated($fallback));
 
 	}
 }

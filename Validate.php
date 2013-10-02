@@ -107,7 +107,7 @@ class Validator {
 		return $this->_errorsByField;
 	}
 	public function Validated($fallbacks = array()) {
-		if ($fallbacks) return array_merge_recursive($fallbacks, $this->_validated);
+		if ($fallbacks) return array_replace_recursive($fallbacks, $this->_validated);
 		return $this->_validated;
 	}
 }
