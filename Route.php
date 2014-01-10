@@ -66,7 +66,7 @@ class Route {
 		} elseif (array_key_exists(':integer', $routes) && preg_match('/^[0-9]+$/', $part)) {
 			$route = $routes[':integer'];
 		// string catch-all
-		} elseif (array_key_exists(':string', $routes)) {
+		} elseif (array_key_exists(':string', $routes) && strlen($part)) {
 			$route = $routes[':string'];
 		/*
 		// Make your own alias like so:
