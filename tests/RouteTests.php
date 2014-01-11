@@ -11,6 +11,7 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
 		$r = array(
+			':root' => Route::To('TestController', 'index'),
 			':string' => $fallback,
 			// Test mapping each folder to a member within a stdClass instance
 			'parent' => array(
@@ -26,9 +27,12 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 					'edit' => Route::To('CategoryController', 'edit', '//id/action'),
 				),
 				'create' => Route::To('CategoryController', 'create'),
+				':string' => Route::To('CategoryController', 'invalidPath'),
 			)
 		);
 		$paths = array(
+			// Test :root usage, make sure :string isn't triggered instead
+			'/' => 'root',
 			// Test :string fallback
 			'/fallback' => 'fallback',
 			'/123' => 'fallback',
@@ -37,11 +41,10 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			// Test assigning names to folders in the URL path
 			'/parent/child/grandchild' => 'parent child grandchild',
 
-
 			'/categories' => 'list categories',
 			'/categories/' => 'list categories',
-			'/categories/all' => '404',
-			'/categories/all/' => '404',
+			'/categories/all' => 'invalid path',
+			'/categories/all/' => 'invalid path',
 			'/categories/create' => 'category creation',
 			'/categories/create/' => 'category creation',
 			'/categories/123' => 'show category 123',
@@ -85,6 +88,9 @@ class Controller {
 }
 
 class TestController extends Controller {
+	public function index() {
+		return 'root';
+	}
 	public function folders($folders) {
 		return implode(' ', array($folders->first, $folders->second, $folders->third));
 	}
@@ -101,6 +107,9 @@ class CategoryController extends Controller {
 	}
 	public function edit($named) {
 		return $named->action . ' category ' . $named->id;
+	}
+	public function invalidPath() {
+		return 'invalid path';
 	}
 }
 
