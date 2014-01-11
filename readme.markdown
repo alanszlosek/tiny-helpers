@@ -20,21 +20,19 @@ Usage:
 		'category' => array(
 			// :integer is an internal alias that matches integers
 			// $path array will be passed to OrderController constructor
-			// byId() will be called with an object that looks like this JSON: {id:123}
-			':integer' => Route::To('OrderController', 'byId', '//id'),
+			// byId() will be passed an object like this: {module:'category',id:123}
+			':integer' => Route::To('OrderController', 'byId', '/module/id'),
 		),
 	);
 
 	Do the following to your request URL:
 
 	* Remove domain
-	* Remove leading slash
 	* Remove query string
-	* Split folder path into an array
 
-	Now, dispatch:
+	Now pass it to dispatch():
 
-	$path = array('category','123');
+	$path = '/category/123';
 	$router = new Route($routes);
 	// dispatch() returns whatever your controller method returns
 	echo $router->dispatch($path);
