@@ -52,16 +52,6 @@ class Route {
 		}
 	}
 	
-
-	// could use reflection and __call and __staticCall to automate this instantiation
-	public function run($labels) {
-		if (!$this->runnable) {
-			// 404
-			return false;
-		}
-		return $this->runnable->run($labels);
-	}
-
 	public function label($label) {
 		$this->label = $label;
 		return $this;
@@ -71,7 +61,6 @@ class Route {
 		$this->runnable = RouteTo::method($class, $method);
 		return $this;
 	}
-    
 
 	/**
 	 * This method is called recursively.
@@ -89,7 +78,11 @@ class Route {
 		// No more path to digest
 		if (!$path) {
 			// If we have no runnable, it'll return false (404)
-			return $this->run($labels);
+			if ($this->runnable instanceof RouteLeaf) {
+				return $this->runnable->run($labels);
+			} else {
+				return false;
+			}
 		}
 
 		$part = array_shift($path);
@@ -104,7 +97,6 @@ class Route {
 		if (!$route) {
 			// No route found, 404 time
 			return false;
-			//if ($this->four instanceof RouteTo) return $this->four->dispatch($path);
 		}
 
 		// If there is no more path to digest, this next call to dispatch will trigger the runnable
@@ -115,7 +107,7 @@ class Route {
 		}
 	}
 
-	// Can override this to handle patterns, etc
+	// Can override this to handle additional patterns
 	protected function getRoute($key) {
 		if (isset($this->routes[ $key ])) {
 			return $this->routes[ $key ];
@@ -126,15 +118,6 @@ class Route {
 		}
 		return null;
 	}
-        /*
-	// numeric catch-all
-	} elseif (array_key_exists(':integer', $routes) && preg_match('/^[0-9]+$/', $part)) {
-		$route = $routes[':integer'];
-	// string catch-all
-	} elseif (array_key_exists(':string', $routes) && strlen($part)) {
-		$route = $routes[':string'];
-	*/
-
 }
 
 class RouteTo {
