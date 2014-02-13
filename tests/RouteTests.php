@@ -29,7 +29,6 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 						)->toMethod('CategoryController', 'view')->label('action'),
 					'create',
 						RouteTo::method('CategoryController', 'create')
-					//_pattern(':string', 'invalidPath', 'CategoryController')
 				)->toMethod('CategoryController', 'listing')->label('id')
 		)->toMethod('TestController', 'index')->label('first');
 
@@ -56,17 +55,9 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'/categories/123/' => 'show category 123',
 			'/categories/123/edit' => 'edit category 123',
 			'/categories/123/move' => false,
-
-			// Test 404
-			// tests doesn't exist, should it fallback or 404?
-			/*
-			'/tests/404path' => '404',
-			'/tests/string' => '404',
-			*/
 		);
 
 		foreach ($paths as $path => $output) {
-			// Remove leading and trailing forward-slash
 			$this->assertEquals($output, $routes->dispatch($path));
 		}
 	}
@@ -113,8 +104,5 @@ class CategoryController extends Controller {
 	}
 	public function edit($params) {
 		return $params->action . ' category ' . $params->id;
-	}
-	public function invalidPath() {
-		return 'invalid path: /'. implode('/', $this->path);
 	}
 }
