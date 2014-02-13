@@ -7,14 +7,12 @@ These are standalone classes that play well with your in-house framework, spaghe
 * Incremental markup builder with HTML special character preparation (H)
 * Input validator that works on deeply nested arrays of data
 
-Route class
+Router class
 ----
 
-Usage:
+Example URL: http://abc.com/category/123?offset=2
 
-	Url: http://abc.com/category/123?offset=2
-
-	Make your routes data structure:
+Make your routes data structure:
 
 	$routes = Routes(
 		'category',
@@ -22,16 +20,16 @@ Usage:
 				// :integer is an internal alias that matches integers
 				// $path array will be passed to OrderController constructor
 				// byId() will be passed an object like this: {module:'category',id:123}
-				':integer' => RouteTo::method('OrderController', 'byId'),
+				':integer' => Route::toClassMethod('OrderController', 'byId'),
 			)->label('id')
 	)->label('module');
 
-	Do the following to your request URL:
+Do the following to your request URL:
 
-	* Remove domain
-	* Remove query string
+* Remove domain
+* Remove query string
 
-	Now pass it to dispatch():
+Now pass it to dispatch():
 
 	$path = '/category/123';
 	// dispatch() returns whatever your controller method returns
