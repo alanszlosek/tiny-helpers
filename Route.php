@@ -30,14 +30,6 @@ $router = new Route($routes);
 echo $router->dispatch($path);
 */
 
-/*
-notes:
-
-I almost don't want Route to be an instance, but we need to hold on to the original path and routes tree
-
-Thinking of building in support for front routers ...
-*/
-
 
 /**
  * Hi
@@ -143,8 +135,6 @@ class RouteTo {
 	public static function Method($class, $method) {
 		return new RouteToMethod($class, $method);
 	}
-}
-class RouteToCallable extends RouteTo {
 }
 class RouteToMethod extends RouteTo {
 	protected $class;
