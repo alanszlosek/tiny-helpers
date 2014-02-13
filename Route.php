@@ -149,19 +149,19 @@ class RouteLeaf {
 	protected $method;
 	public $parent;
 
-    public function __construct($class, $method) {
-        $this->class = $class;
-        $this->method = $method;
-    }
+	public function __construct($class, $method) {
+		$this->class = $class;
+		$this->method = $method;
+	}
 
-    // Instantiate and run
-    public function run($labels) {
+	// Instantiate and run
+	public function run($labels) {
 		$class = $this->class;
 		$method = $this->method;
 		if (!is_object($class)) { // If we were given a class name, instead of an instance
 			$c = new $class(null);
 		}
-        return $c->$method($labels);
-    }
+		return $c->$method($labels);
+	}
 }
 
