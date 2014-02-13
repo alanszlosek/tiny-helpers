@@ -10,13 +10,14 @@ Url: http://abc.com/category/123/?offset=2
 
 Make your routes data structure:
 
-$routes = array(
-	'category' => array(
-		// :integer is an internal alias that matches integers
-		// $path array will be passed to OrderController constructor
-		// byId() will be called with an object that looks like this JSON: {id:123}
-		':integer' => Route::To('OrderController', 'byId', '//id'),
-	),
+$routes = Routes(
+	'category',
+		Routes(
+			// :integer is an internal alias that matches integers
+			// $path array will be passed to OrderController constructor
+			// byId() will be called with an object that looks like this JSON: {id:123}
+			':integer' => Route::To('OrderController', 'byId', '//id'),
+		)
 );
 
 You should only pass the path portion of your URL to dispatch. Without the scheme, domain or query string.
@@ -25,51 +26,18 @@ Ensure no repeat slashes (/categories//something///) before calling dispatch().
 Now dispatch:
 
 $path = "/category/123/";
-$router = new Route($routes);
 // dispatch() returns whatever your controller method returns
-echo $router->dispatch($path);
+echo $routes->dispatch($path);
 */
-
-
-/**
- * Not sure how or whether this should address GET vs POST
- */
 
 function Routes() {
 	$args = func_get_args();
 	$r = new Route($args);
 	return $r;
-    /*
-    $args = func_get_args();
-
-    // If we pass an instance of Route ... it's a sub-route. otherwise it's probably a callable
-    $route = null;
-    foreach ($params as $arg) {
-        if ($arg instanceof Route) {
-            $route = $arg;
-            break;
-        }
-        $args[] = $arg;
-    }
-    if (!$route) {
-        $route = Routes();
-    }
-    if ($args) {
-        $route->run(new RouteRun($args[0], $ars[1]));
-    }
-    */
-
-	/*
-    $r = new Route();
-    if ($method && $class) {
-        $r->runnable(new RouteRun($class, $method));
-    }
-    return $r;
-	*/
 }
 
 class Route {
-	// This controller and method get called if we've digested all of the path
+	// $runnable is intended to be an instance of a RouteLeaf class, with a run() method
 	public $runnable;
 	public $label;
 	public $routes = array();
@@ -140,7 +108,7 @@ class Route {
 		}
 
 		// If there is no more path to digest, this next call to dispatch will trigger the runnable
-		if ($route instanceof RouteRun) {
+		if ($route instanceof RouteLeaf) {
 			return $route->run($labels);
 		} else {
 			return $route->dispatch($path, $labels);
@@ -169,12 +137,12 @@ class Route {
 
 class RouteTo {
 	public static function method($class, $method) {
-		return new RouteRun($class, $method);
+		return new RouteLeaf($class, $method);
 	}
 }
 
 // Need to define this interface
-class RouteRun {
+class RouteLeaf {
 	protected $class;
 	protected $method;
 	public $parent;

@@ -5,54 +5,54 @@ require('../Route.php');
 
 class RouteTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
-		$fourZeroFour = Route::To('Controller', 'four');
-		$fallback = Route::To('Controller', 'fallback'); // the method doesn't actually exist
-
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
-		$r = array(
-			':root' => Route::To('TestController', 'index'),
-			':string' => $fallback,
-			// Test mapping each folder to a member within a stdClass instance
-			'parent' => array(
-				'child' => array(
-					'grandchild' => Route::To('TestController', 'folders')
-				),
-			),
-
-			'categories' => array(
-				':root' => Route::To('CategoryController', 'listing'),
-				':integer' => array(
-					':root' => Route::To('CategoryController', 'view'),
-					'edit' => Route::To('CategoryController', 'edit'),
-				),
-				'create' => Route::To('CategoryController', 'create'),
-				':string' => Route::To('CategoryController', 'invalidPath'),
-			)
-		);
+		$routes = Routes(
+			//_pattern(':string', 'fallback', 'Controller')->
+			// no root method to run
+			'parent',
+				Routes(
+					'child',
+						Routes(
+							'grandchild', RouteTo::method('TestController', 'folders')
+						)->label('third')
+				)->label('second'),
+			'categories',
+				Routes(
+					':integer',
+						Routes(
+							'edit', RouteTo::method('CategoryController', 'edit')
+						)->toMethod('CategoryController', 'view')->label('action'),
+					'create',
+						RouteTo::method('CategoryController', 'create')
+					//_pattern(':string', 'invalidPath', 'CategoryController')
+				)->toMethod('CategoryController', 'listing')->label('id')
+		)->toMethod('TestController', 'index')->label('first');
 
 		$paths = array(
 			// Test :root usage, make sure :string isn't triggered instead
 			'/' => 'root',
 			// Test :string fallback
+			/*
 			'/fallback' => 'fallback',
 			'/123' => 'fallback',
 			'/fall/back/' => 'fallback',
+			*/
 
 			// Test assigning names to folders in the URL path
 			'/parent/child/grandchild' => 'parent child grandchild',
 
 			'/categories' => 'list categories',
 			'/categories/' => 'list categories',
-			'/categories/invalid' => 'invalid path: /categories/invalid',
-			'/categories/invalid/' => 'invalid path: /categories/invalid',
-			'/categories/invalid/path' => 'invalid path: /categories/invalid/path',
+			'/categories/invalid' => false,
+			'/categories/invalid/' => false,
+			'/categories/invalid/path' => false,
 			'/categories/create' => 'category creation',
 			'/categories/create/' => 'category creation',
 			'/categories/123' => 'show category 123',
 			'/categories/123/' => 'show category 123',
 			'/categories/123/edit' => 'edit category 123',
-			'/categories/123/move' => '404',
+			'/categories/123/move' => false,
 
 			// Test 404
 			// tests doesn't exist, should it fallback or 404?
@@ -62,14 +62,13 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			*/
 		);
 
-		$r = new Route($r, $fourZeroFour);
-
 		foreach ($paths as $path => $output) {
 			// Remove leading and trailing forward-slash
-			$this->assertEquals($output, $r->dispatch($path));
+			$this->assertEquals($output, $routes->dispatch($path));
 		}
 	}
 }
+
 
 
 
@@ -93,8 +92,8 @@ class TestController extends Controller {
 	public function index() {
 		return 'root';
 	}
-	public function folders() {
-		return implode(' ', $this->path);
+	public function folders($params) {
+		return $params->first . ' ' . $params->second . ' ' . $params->third;
 	}
 }
 class CategoryController extends Controller {
@@ -104,15 +103,13 @@ class CategoryController extends Controller {
 	public function listing() {
 		return 'list categories';
 	}
-	public function view() {
-		return 'show category ' . $this->path[1];
+	public function view($params) {
+		return 'show category ' . $params->id;
 	}
-	public function edit() {
-		return $this->path[2] . ' category ' . $this->path[1];
+	public function edit($params) {
+		return $params->action . ' category ' . $params->id;
 	}
 	public function invalidPath() {
 		return 'invalid path: /'. implode('/', $this->path);
 	}
 }
-
-
