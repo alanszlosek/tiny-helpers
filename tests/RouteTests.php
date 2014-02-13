@@ -5,10 +5,14 @@ require('../Route.php');
 
 class RouteTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
+		$stringFallback = RouteTo::method('Controller', 'stringFallback');
+		$intFallback = RouteTo::method('Controller', 'intFallback');
+
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
 		$routes = Routes(
-			//_pattern(':string', 'fallback', 'Controller')->
+			':string', $stringFallback,
+			':integer', $intFallback,
 			// no root method to run
 			'parent',
 				Routes(
@@ -30,14 +34,13 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 		)->toMethod('TestController', 'index')->label('first');
 
 		$paths = array(
-			// Test :root usage, make sure :string isn't triggered instead
+			// Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead
 			'/' => 'root',
+
 			// Test :string fallback
-			/*
-			'/fallback' => 'fallback',
-			'/123' => 'fallback',
-			'/fall/back/' => 'fallback',
-			*/
+			'/fallback' => 'stringFallback',
+			'/123' => 'intFallback',
+			'/fall/back/' => 'stringFallback',
 
 			// Test assigning names to folders in the URL path
 			'/parent/child/grandchild' => 'parent child grandchild',
@@ -77,10 +80,12 @@ class Controller {
 	public function __construct($path) {
 		$this->path = $path;
 	}
-	// If the controller method doesn't exists, here's our fallback
-	// It simply returns the folder names
-	public function __call($name, $args) {
-		return 'fallback';
+
+	public function stringFallback() {
+		return 'stringFallback';
+	}
+	public function intFallback() {
+		return 'intFallback';
 	}
 
 	public function four() {

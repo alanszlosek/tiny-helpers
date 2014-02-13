@@ -121,6 +121,8 @@ class Route {
 			return $this->routes[ $key ];
 		} elseif (isset($this->routes[':integer']) && preg_match('/^[0-9]+$/', $key)) {
 			return $this->routes[':integer'];
+		} elseif (isset($this->routes[':string']) && strlen($key)) {
+			return $this->routes[':string'];
 		}
 		return null;
 	}
