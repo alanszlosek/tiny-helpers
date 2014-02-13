@@ -16,14 +16,15 @@ Usage:
 
 	Make your routes data structure:
 
-	$routes = array(
-		'category' => array(
-			// :integer is an internal alias that matches integers
-			// $path array will be passed to OrderController constructor
-			// byId() will be passed an object like this: {module:'category',id:123}
-			':integer' => Route::To('OrderController', 'byId', '/module/id'),
-		),
-	);
+	$routes = Routes(
+		'category',
+			Routes(
+				// :integer is an internal alias that matches integers
+				// $path array will be passed to OrderController constructor
+				// byId() will be passed an object like this: {module:'category',id:123}
+				':integer' => RouteTo::method('OrderController', 'byId'),
+			)->label('id')
+	)->label('module');
 
 	Do the following to your request URL:
 
@@ -33,9 +34,8 @@ Usage:
 	Now pass it to dispatch():
 
 	$path = '/category/123';
-	$router = new Route($routes);
 	// dispatch() returns whatever your controller method returns
-	echo $router->dispatch($path);
+	echo $routes->dispatch($path);
 
 See the unit tests for a more complex example.
 
