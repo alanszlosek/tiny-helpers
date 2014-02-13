@@ -5,8 +5,8 @@ require('../Route.php');
 
 class RouteTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
-		$stringFallback = RouteTo::method('Controller', 'stringFallback');
-		$intFallback = RouteTo::method('Controller', 'intFallback');
+		$stringFallback = Route::toClassMethod('Controller', 'stringFallback');
+		$intFallback = Route::toClassMethod('Controller', 'intFallback');
 
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
@@ -18,19 +18,19 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 				Routes(
 					'child',
 						Routes(
-							'grandchild', RouteTo::method('TestController', 'folders')
+							'grandchild', Route::toClassMethod('TestController', 'folders')
 						)->label('third')
 				)->label('second'),
 			'categories',
 				Routes(
 					':integer',
 						Routes(
-							'edit', RouteTo::method('CategoryController', 'edit')
-						)->toMethod('CategoryController', 'view')->label('action'),
+							'edit', Route::toClassMethod('CategoryController', 'edit')
+						)->toClassMethod('CategoryController', 'view')->label('action'),
 					'create',
-						RouteTo::method('CategoryController', 'create')
-				)->toMethod('CategoryController', 'listing')->label('id')
-		)->toMethod('TestController', 'index')->label('first');
+						Route::toClassMethod('CategoryController', 'create')
+				)->toClassMethod('CategoryController', 'listing')->label('id')
+		)->toClassMethod('TestController', 'index')->label('first');
 
 		$paths = array(
 			// Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead

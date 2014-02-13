@@ -6,37 +6,42 @@ https://github.com/alanszlosek/tiny-helpers
 
 EXAMPLE
 
-Url: http://abc.com/category/123/?offset=2
+URL: http://abc.com/category/123/?offset=2
 
 Make your routes data structure:
 
-$routes = Routes(
-	'category',
-		Routes(
-			// :integer is an internal alias that matches integers
-			// $path array will be passed to OrderController constructor
-			// byId() will be called with an object that looks like this JSON: {id:123}
-			':integer' => Route::To('OrderController', 'byId', '//id'),
-		)
-);
+	$routes = Routes(
+		'category',
+			Routes(
+				// :integer is an internal alias that matches integers
+				// $path array will be passed to OrderController constructor
+				// byId() will be called with an object that looks like this JSON: {id:123}
+				':integer' => Route::To('OrderController', 'byId', '//id'),
+			)
+	);
 
-You should only pass the path portion of your URL to dispatch. Without the scheme, domain or query string.
+Dispatch by passing the path portion of your URL to dispatch, without the scheme, domain or query string.
 Ensure no repeat slashes (/categories//something///) before calling dispatch().
 
-Now dispatch:
+	$path = "/category/123/";
+	// dispatch() returns whatever your controller method returns
+	echo $routes->dispatch($path);
 
-$path = "/category/123/";
-// dispatch() returns whatever your controller method returns
-echo $routes->dispatch($path);
+EXTEND FOR MORE POWER
+
+If you extend the Route class you can even use your route tree to generate navigation for your site.
+
+Instead of routing to a controller method, you may want to route to something that satisfies `is_callable()` ... extend RouteLeaf
+You can also extend 
 */
 
 function Routes() {
 	$args = func_get_args();
-	$r = new Route($args);
+	$r = new Router($args);
 	return $r;
 }
 
-class Route {
+class Router {
 	// $runnable is intended to be an instance of a RouteLeaf class, with a run() method
 	public $runnable;
 	public $label;
@@ -57,10 +62,6 @@ class Route {
 		return $this;
 	}
 
-	public function toMethod($class, $method) {
-		$this->runnable = RouteTo::method($class, $method);
-		return $this;
-	}
 
 	/**
 	 * This method is called recursively.
@@ -118,29 +119,48 @@ class Route {
 		}
 		return null;
 	}
-}
 
-class RouteTo {
-	public static function method($class, $method) {
-		return new RouteLeaf($class, $method);
+
+	public function toClassMethod($class, $method) {
+		$this->runnable = Route::toClassMethod($class, $method);
+		return $this;
 	}
 }
 
-// Need to define this interface
-class RouteLeaf {
-	protected $class;
-	protected $method;
-	public $parent;
 
-	public function __construct($class, $method) {
-		$this->class = $class;
-		$this->method = $method;
+// The following 3 classes could use some more elegance
+class Route {
+	public static function toClassMethod($class, $method) {
+		return new RouteLeafClassMethod($class, $method);
+	}
+	public static function toCallable($callable) {
+		return new RouteLeaf($callable);
+	}
+}
+
+class RouteLeaf {
+	public $parent;
+	protected $callable;
+
+	public function __construct($callable) {
+		$this->callable = $callable;
 	}
 
 	// Instantiate and run
 	public function run($labels) {
-		$class = $this->class;
-		$method = $this->method;
+		return $this->callable($labels);
+	}
+}
+
+class RouteLeafClassMethod extends RouteLeaf {
+	public function __construct($class, $method) {
+		parent::__construct(array($class, $method));
+	}
+
+	// Instantiate and run
+	public function run($labels) {
+		$class = $this->callable[0];
+		$method = $this->callable[1];
 		if (!is_object($class)) { // If we were given a class name, instead of an instance
 			$c = new $class(null);
 		}
