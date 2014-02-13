@@ -32,134 +32,166 @@ echo $router->dispatch($path);
 
 
 /**
- * Hi
+ * Not sure how or whether this should address GET vs POST
  */
+
+function Routes() {
+	$args = func_get_args();
+	$r = new Route($args);
+	return $r;
+    /*
+    $args = func_get_args();
+
+    // If we pass an instance of Route ... it's a sub-route. otherwise it's probably a callable
+    $route = null;
+    foreach ($params as $arg) {
+        if ($arg instanceof Route) {
+            $route = $arg;
+            break;
+        }
+        $args[] = $arg;
+    }
+    if (!$route) {
+        $route = Routes();
+    }
+    if ($args) {
+        $route->run(new RouteRun($args[0], $ars[1]));
+    }
+    */
+
+	/*
+    $r = new Route();
+    if ($method && $class) {
+        $r->runnable(new RouteRun($class, $method));
+    }
+    return $r;
+	*/
+}
+
 class Route {
-	protected $routes;
-	protected $four;
-	protected $path;
+	// This controller and method get called if we've digested all of the path
+	public $runnable;
+	public $label;
+	public $routes = array();
+	public $parent;
 
-	// Pass your own Route::To if you want custom 404 support
-	public function __construct($routes, $four = null) {
-		$this->routes = $routes;
-		$this->four = $four;
-	}
-	/**
-	 * This method is called recursively.
-	 * It consumes $path and recurses into a $routes element that matches the current path element
-	 */
-	public function dispatch($path, $routes = array()) {
-		// First run
-		if (!$routes) {
-			$this->path = explode('/', trim($path, '/'));
-			$path = $this->path;
-			$routes = $this->routes;
+	public function __construct($routes) {
+		for ($i = 0; $i < sizeof($routes); $i+=2) {
+			$key = $routes[$i];
+			$route = $routes[$i+1];
+			$route->parent = $this;
+			$this->routes[$key] = $route;
 		}
-
-		$part = array_shift($path);
-		$route = null; // assigned when we match a path folder to a route
-
-		if (array_key_exists($part, $routes)) {
-			$route = $routes[ $part ];
-		// numeric wildcard
-		} elseif (array_key_exists(':integer', $routes) && preg_match('/^[0-9]+$/', $part)) {
-			$route = $routes[':integer'];
-		// string wildcard for non-empty string
-		} elseif (array_key_exists(':string', $routes) && strlen($part)) {
-			$route = $routes[':string'];
-		/*
-		// Make your own alias like so:
-		} elseif (array_key_exists(':num-alpha', $routes) && preg_match('/[0-9]+\-[a-z]+/i', $part)) {
-			// Boom
-
-		*/
-		// catch for empty string (end of path)
-		} elseif (array_key_exists(':root', $routes) && !$part) {
-			$route = $routes[':root'];
-		} elseif ($routes instanceof RouteTo) {
-			$route = $routes;
-		}
-
-		// If $route is an array, then we haven't found a dispatch destination yet
-		if (is_array($route)) { // more nesting to do, more path to consume
-			return $this->dispatch($path, $route);
-		} elseif ($route instanceof RouteTo) {
-			// Run the controller
-			return $route->dispatch($this->path);
-		} else {
-			// 404
-			if ($this->four instanceof RouteTo) return $this->four->dispatch($path);
-		}
-		return null;
-	}
-
-	/**
-	 * Use this within your routes data structure
-	 */
-	public static function Routes($routes) {
-		$r = new RouteTo();
-		$r->routes($routes);
-		return $r;
-	}
-	public static function To($class, $method) {
-		return new RouteToMethod($class, $method);
 	}
 	
-}
-class RouteTo {
-	protected $routes;
-	public function __construct() {
-		$this->routes = array();
-	}
-	public function dispatch($path) {
-		$named = null;
-		/*
-		if ($this->namings) {
-			$named = new stdClass();
-			$namings = explode('/', substr($this->namings, 1)); // Remove leading slash
-			foreach ($namings as $i => $name) {
-				if (!$name) continue;
-				$named->$name = $path[ $i ];
-			}
+
+	// could use reflection and __call and __staticCall to automate this instantiation
+	public function run($labels) {
+		if (!$this->runnable) {
+			// 404
+			return false;
 		}
-		*/
-		return $c->$method($named);
+		return $this->runnable->run($labels);
 	}
-	public function routes($routes = null) {
-		if ($routes == null) return $this->routes;
-		$this->routes = $routes;
+
+	public function label($label) {
+		$this->label = $label;
 		return $this;
 	}
 
-	// Route to function or array($obj, $method)
-	public static function Method($class, $method) {
-		return new RouteToMethod($class, $method);
+	public function toMethod($class, $method) {
+		$this->runnable = RouteTo::method($class, $method);
+		return $this;
+	}
+    
+
+	/**
+	 * This method is called recursively.
+	 * It walks $path, traversing $routes alongside until one matches, or there are no more routes
+	 */
+	public function dispatch($path, $labels = null) {
+		// First run
+		if ($labels == null) {
+			$labels = new stdClass;
+			$path = trim($path, '/');
+			// Don't explode an empty string ... it does weird things
+			$path = ($path ? explode('/', $path) : array());
+		}
+
+		// No more path to digest
+		if (!$path) {
+			// If we have no runnable, it'll return false (404)
+			return $this->run($labels);
+		}
+
+		$part = array_shift($path);
+
+		// If the current route level has been given a label, use it to label the current path portion
+		if ($this->label) {
+			$label = $this->label;
+			$labels->$label = $part;
+		}
+
+		$route = $this->getRoute($part);
+		if (!$route) {
+			// No route found, 404 time
+			return false;
+			//if ($this->four instanceof RouteTo) return $this->four->dispatch($path);
+		}
+
+		// If there is no more path to digest, this next call to dispatch will trigger the runnable
+		if ($route instanceof RouteRun) {
+			return $route->run($labels);
+		} else {
+			return $route->dispatch($path, $labels);
+		}
+	}
+
+	// Can override this to handle patterns, etc
+	protected function getRoute($key) {
+		if (isset($this->routes[ $key ])) {
+			return $this->routes[ $key ];
+		} elseif (isset($this->routes[':integer']) && preg_match('/^[0-9]+$/', $key)) {
+			return $this->routes[':integer'];
+		}
+		return null;
+	}
+        /*
+	// numeric catch-all
+	} elseif (array_key_exists(':integer', $routes) && preg_match('/^[0-9]+$/', $part)) {
+		$route = $routes[':integer'];
+	// string catch-all
+	} elseif (array_key_exists(':string', $routes) && strlen($part)) {
+		$route = $routes[':string'];
+	*/
+
+}
+
+class RouteTo {
+	public static function method($class, $method) {
+		return new RouteRun($class, $method);
 	}
 }
-class RouteToMethod extends RouteTo {
+
+// Need to define this interface
+class RouteRun {
 	protected $class;
 	protected $method;
-	public function __construct($class, $method) {
-		$this->class = $class;
-		$this->method = $method;
-	}
-	public function dispatch($path) {
-		$class = $this->class;
-		$method = $this->method;
-		$c = new $class($path);
-		return $c->$method();
-	}
-	protected function getCallable() {
+	public $parent;
+
+    public function __construct($class, $method) {
+        $this->class = $class;
+        $this->method = $method;
+    }
+
+    // Instantiate and run
+    public function run($labels) {
 		$class = $this->class;
 		$method = $this->method;
 		if (!is_object($class)) { // If we were given a class name, instead of an instance
-			/*
-			Would be nice to also pass the remaning portions of the path ... those not consumed
-			And only pass the matched bits as the first param
-			Then we could nest Route instances ... front controller setup
-			*/
-			$c = new $class($path);
+			$c = new $class(null);
 		}
-	}
+        return $c->$method($labels);
+    }
 }
 
