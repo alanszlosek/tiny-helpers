@@ -28,7 +28,9 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 							'edit', Route::toClassMethod('CategoryController', 'edit')
 						)->toClassMethod('CategoryController', 'view')->label('action'),
 					'create',
-						Route::toClassMethod('CategoryController', 'create')
+						Route::toClassMethod('CategoryController', 'create'),
+					'func',
+						Route::toCallable('callableFunction')
 				)->toClassMethod('CategoryController', 'listing')->label('id')
 		)->toClassMethod('TestController', 'index')->label('first');
 
@@ -55,6 +57,7 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'/categories/123/' => 'show category 123',
 			'/categories/123/edit' => 'edit category 123',
 			'/categories/123/move' => false,
+			'/categories/func' => 'wee callable'
 		);
 
 		foreach ($paths as $path => $output) {
@@ -105,4 +108,8 @@ class CategoryController extends Controller {
 	public function edit($params) {
 		return $params->action . ' category ' . $params->id;
 	}
+}
+
+function callableFunction($params) {
+	return 'wee callable';
 }

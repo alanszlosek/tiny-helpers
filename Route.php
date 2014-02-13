@@ -148,7 +148,8 @@ class RouteLeaf {
 
 	// Instantiate and run
 	public function run($labels) {
-		return $this->callable($labels);
+		$callable = $this->callable;
+		return $callable($labels);
 	}
 }
 
