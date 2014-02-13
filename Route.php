@@ -30,11 +30,18 @@ $router = new Route($routes);
 echo $router->dispatch($path);
 */
 
+/*
+notes:
+
+I almost don't want Route to be an instance, but we need to hold on to the original path and routes tree
+
+Thinking of building in support for front routers ...
+*/
+
 
 /**
- * Not sure how or whether this should address GET vs POST
+ * Hi
  */
-
 class Route {
 	protected $routes;
 	protected $four;
@@ -47,7 +54,7 @@ class Route {
 	}
 	/**
 	 * This method is called recursively.
-	 * It walks $path, traversing $routes alongside until one matches, or there are no more routes
+	 * It consumes $path and recurses into a $routes element that matches the current path element
 	 */
 	public function dispatch($path, $routes = array()) {
 		// First run
@@ -58,14 +65,14 @@ class Route {
 		}
 
 		$part = array_shift($path);
-		$route = null; // assigned when we match a folder to a route
+		$route = null; // assigned when we match a path folder to a route
 
 		if (array_key_exists($part, $routes)) {
 			$route = $routes[ $part ];
-		// numeric catch-all
+		// numeric wildcard
 		} elseif (array_key_exists(':integer', $routes) && preg_match('/^[0-9]+$/', $part)) {
 			$route = $routes[':integer'];
-		// string catch-all
+		// string wildcard for non-empty string
 		} elseif (array_key_exists(':string', $routes) && strlen($part)) {
 			$route = $routes[':string'];
 		/*
@@ -74,8 +81,11 @@ class Route {
 			// Boom
 
 		*/
+		// catch for empty string (end of path)
 		} elseif (array_key_exists(':root', $routes) && !$part) {
 			$route = $routes[':root'];
+		} elseif ($routes instanceof RouteTo) {
+			$route = $routes;
 		}
 
 		// If $route is an array, then we haven't found a dispatch destination yet
@@ -94,26 +104,24 @@ class Route {
 	/**
 	 * Use this within your routes data structure
 	 */
-	public static function To($class, $method, $namings = null) {
-		return new RouteTo($class, $method, $namings);
+	public static function Routes($routes) {
+		$r = new RouteTo();
+		$r->routes($routes);
+		return $r;
 	}
+	public static function To($class, $method) {
+		return new RouteToMethod($class, $method);
+	}
+	
 }
 class RouteTo {
-	protected $class;
-	protected $method;
-	protected $namings;
-	public function __construct($class, $method, $namings = null) {
-		$this->class = $class;
-		$this->method = $method;
-		$this->namings = $namings;
+	protected $routes;
+	public function __construct() {
+		$this->routes = array();
 	}
 	public function dispatch($path) {
-		$class = $this->class;
-		$method = $this->method;
-		if (!is_object($class)) { // If we were given a class name, instead of an instance
-			$c = new $class($path);
-		}
 		$named = null;
+		/*
 		if ($this->namings) {
 			$named = new stdClass();
 			$namings = explode('/', substr($this->namings, 1)); // Remove leading slash
@@ -122,7 +130,46 @@ class RouteTo {
 				$named->$name = $path[ $i ];
 			}
 		}
+		*/
 		return $c->$method($named);
+	}
+	public function routes($routes = null) {
+		if ($routes == null) return $this->routes;
+		$this->routes = $routes;
+		return $this;
+	}
+
+	// Route to function or array($obj, $method)
+	public static function Method($class, $method) {
+		return new RouteToMethod($class, $method);
+	}
+}
+class RouteToCallable extends RouteTo {
+}
+class RouteToMethod extends RouteTo {
+	protected $class;
+	protected $method;
+	public function __construct($class, $method) {
+		$this->class = $class;
+		$this->method = $method;
+	}
+	public function dispatch($path) {
+		$class = $this->class;
+		$method = $this->method;
+		$c = new $class($path);
+		return $c->$method();
+	}
+	protected function getCallable() {
+		$class = $this->class;
+		$method = $this->method;
+		if (!is_object($class)) { // If we were given a class name, instead of an instance
+			/*
+			Would be nice to also pass the remaning portions of the path ... those not consumed
+			And only pass the matched bits as the first param
+			Then we could nest Route instances ... front controller setup
+			*/
+			$c = new $class($path);
+		}
 	}
 }
 

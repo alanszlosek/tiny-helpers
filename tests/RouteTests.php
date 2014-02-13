@@ -16,20 +16,21 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			// Test mapping each folder to a member within a stdClass instance
 			'parent' => array(
 				'child' => array(
-					'grandchild' => Route::To('TestController', 'folders', '/first/second/third')
+					'grandchild' => Route::To('TestController', 'folders')
 				),
 			),
 
 			'categories' => array(
 				':root' => Route::To('CategoryController', 'listing'),
 				':integer' => array(
-					':root' => Route::To('CategoryController', 'view', '//id'),
-					'edit' => Route::To('CategoryController', 'edit', '//id/action'),
+					':root' => Route::To('CategoryController', 'view'),
+					'edit' => Route::To('CategoryController', 'edit'),
 				),
 				'create' => Route::To('CategoryController', 'create'),
 				':string' => Route::To('CategoryController', 'invalidPath'),
 			)
 		);
+
 		$paths = array(
 			// Test :root usage, make sure :string isn't triggered instead
 			'/' => 'root',
@@ -43,8 +44,9 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 
 			'/categories' => 'list categories',
 			'/categories/' => 'list categories',
-			'/categories/all' => 'invalid path',
-			'/categories/all/' => 'invalid path',
+			'/categories/invalid' => 'invalid path: /categories/invalid',
+			'/categories/invalid/' => 'invalid path: /categories/invalid',
+			'/categories/invalid/path' => 'invalid path: /categories/invalid/path',
 			'/categories/create' => 'category creation',
 			'/categories/create/' => 'category creation',
 			'/categories/123' => 'show category 123',
@@ -74,7 +76,7 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 class Controller {
 	protected $path;
 	public function __construct($path) {
-		$this->path;
+		$this->path = $path;
 	}
 	// If the controller method doesn't exists, here's our fallback
 	// It simply returns the folder names
@@ -91,8 +93,8 @@ class TestController extends Controller {
 	public function index() {
 		return 'root';
 	}
-	public function folders($folders) {
-		return implode(' ', array($folders->first, $folders->second, $folders->third));
+	public function folders() {
+		return implode(' ', $this->path);
 	}
 }
 class CategoryController extends Controller {
@@ -102,14 +104,14 @@ class CategoryController extends Controller {
 	public function listing() {
 		return 'list categories';
 	}
-	public function view($named) {
-		return 'show category ' . $named->id;
+	public function view() {
+		return 'show category ' . $this->path[1];
 	}
-	public function edit($named) {
-		return $named->action . ' category ' . $named->id;
+	public function edit() {
+		return $this->path[2] . ' category ' . $this->path[1];
 	}
 	public function invalidPath() {
-		return 'invalid path';
+		return 'invalid path: /'. implode('/', $this->path);
 	}
 }
 
