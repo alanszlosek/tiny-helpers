@@ -1,6 +1,6 @@
 <?php
 
-require('../Route.php');
+require('../Router.php');
 
 
 class RouteTests extends PHPUnit_Framework_TestCase {

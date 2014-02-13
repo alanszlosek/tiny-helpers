@@ -29,10 +29,9 @@ Ensure no repeat slashes (/categories//something///) before calling dispatch().
 
 EXTEND FOR MORE POWER
 
-If you extend the Route class you can even use your route tree to generate navigation for your site.
+If you extend the Router class you can even use your route tree to generate navigation for your site.
 
-Instead of routing to a controller method, you may want to route to something that satisfies `is_callable()` ... extend RouteLeaf
-You can also extend 
+Extend RouteLeaf if you want to route to something else besides methods or callables.
 */
 
 function Routes() {
