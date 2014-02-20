@@ -147,7 +147,7 @@ class Router extends RouteNode {
 
 
 	public function toClassMethod($class, $method) {
-		$this->callable(array($class, $method));
+		$this->callable = array($class, $method);
 		return $this;
 	}
 }
