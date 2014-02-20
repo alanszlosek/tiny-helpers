@@ -18,21 +18,21 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 				Routes(
 					'child',
 						Routes(
-							'grandchild', Route::toClassMethod('TestController', 'folders')
-						)->label('third')
-				)->label('second'),
+							'grandchild', Route::toClassMethod('TestController', 'folders')->label('third')
+						)->label('second')
+				)->label('first'),
 			'categories',
 				Routes(
 					':integer',
 						Routes(
-							'edit', Route::toClassMethod('CategoryController', 'edit')
-						)->toClassMethod('CategoryController', 'view')->label('action'),
+							'edit', Route::toClassMethod('CategoryController', 'edit')->label('action')
+						)->toClassMethod('CategoryController', 'view')->label('id'),
 					'create',
 						Route::toClassMethod('CategoryController', 'create'),
 					'func',
 						Route::toCallable('callableFunction')
-				)->toClassMethod('CategoryController', 'listing')->label('id')
-		)->toClassMethod('TestController', 'index')->label('first');
+				)->toClassMethod('CategoryController', 'listing')
+		)->toClassMethod('TestController', 'index');
 
 		$paths = array(
 			// Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead
