@@ -19,10 +19,11 @@ Make your routes data structure:
 			Routes(
 				// :integer is an internal alias that matches integers
 				// $path array will be passed to OrderController constructor
-				// byId() will be passed an object like this: {module:'category',id:123}
-				':integer' => Route::toClassMethod('OrderController', 'byId'),
-			)->label('id')
-	)->label('module');
+				// the labels given to URL path folders will used in an object like this: {module:'category',id:123}
+				// it will be passed as the first parameter to the callable (class method)
+				':integer' => Route::toClassMethod('OrderController', 'byId')->label('id'),
+			)->label('module')
+	);
 
 Do the following to your request URL:
 
