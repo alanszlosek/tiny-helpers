@@ -13,7 +13,6 @@ Make your routes data structure. Routes() accepts parameters in pairs. The first
 	$routes = Routes(
 		'category', Routes(
 			// :integer is an internal alias that matches integers
-			// $path array will be passed to OrderController constructor
 			// byId() will be called with an object that looks like this JSON: {id:123}
 			':integer', Route::toClassMethod('OrderController', 'byId')->label('id')
 		)
@@ -27,7 +26,7 @@ Ensure no repeat slashes (/categories//something///) before calling dispatch().
 	echo $routes->dispatch($path);
 */
 
-// YOU SHOULD IMPLEMENT THIS FUNCTION YOURSELF, SINCE YOU MAY WANT TO EXTEND THE Router CLASS
+// IF YOU WANT TO EXTEND THE Router CLASS, IMPLEMENT THIS FUNCTION YOURSELF TO RETAIN THE SYNTACTIC SUGAR
 if (!function_exists('Routes')) {
 	function Routes() {
 		$args = func_get_args();
@@ -85,11 +84,12 @@ class Router extends RouteNode {
 
 	/**
 	 * This method is called recursively.
-	 * It walks $path, traversing $routes alongside until one matches, or there are no more routes
+	 * It walks $path, follwing each node from the $routes tree that matches it
 	 */
 	public function dispatch($path, $labels = null) {
-		// First run
+		// First run, $path should be a string
 		if (!is_array($path)) {
+            // Could use a method here that can be overridden, to make it easier to pass more info to callables
 			$labels = new stdClass;
 			$labels->__routerInstance = $this;
 			$path = trim($path, '/');
@@ -101,7 +101,7 @@ class Router extends RouteNode {
 
 		// No more path to digest
 		if (!$path) {
-			// If we have no runnable, it'll return false (404)
+			// If we have no callable, it'll return false (404)
 			if ($this->callable) {
 				return $this->run($labels);
 			} else {
@@ -110,8 +110,6 @@ class Router extends RouteNode {
 		}
 
 		$part = array_shift($path);
-
-		// Feel liek this can be merged with the !$path check above
 		$route = $this->getRoute($part);
 		if (!$route) {
 			// No route found, 404 time
@@ -124,11 +122,11 @@ class Router extends RouteNode {
 			$labels->$label = $part;
 		}
 
-		// If there is no more path to digest, this next call to dispatch will trigger the runnable
+		// If there is no more path to digest, this next call to dispatch will trigger the callable
 		if ($route instanceof Router) {
 			return $route->dispatch($path, $labels);
 		} else {
-			// If it's not an instance of Router, it SHOULD be an instance of RouteCallable
+			// If it's not an instance of Router, it SHOULD be an instance of RouteNode
 			return $route->run($labels);
 		}
 	}
