@@ -5,6 +5,8 @@ H - Sometimes you need to build HTML via code
 MIT Licensed. See LICENSE.txt for details.
 */
 class H {
+	// So subclasses can add additional tags
+	protected static $_tags = array('a', 'br', 'button', 'div', 'em', 'fieldset', 'form', 'img', 'label', 'legend', 'li', 'ol', 'option', 'p', 'span', 'strong', 'submit', 'td', 'th', 'tr', 'ul');
 	protected $_tag;
 	protected $_attributes = array();
 	protected $_children = array();
@@ -21,9 +23,8 @@ class H {
 		}
 		$out .= '>';
 		foreach ($this->_children as $child) {
-			if ($child instanceof H) $out .= $child; //->__toString();
+			if ($child instanceof H) $out .= $child;
 			else $out .= htmlentities($child);
-			//$out .= $child;
 		}
 		$out .= '</' . $this->_tag . '>';
 		return $out;
@@ -55,8 +56,7 @@ class H {
 
 	public static function __callStatic($name, $arguments) {
 		$name = strtolower($name);
-		$tags = explode(',', 'a,br,button,div,em,fieldset,form,img,label,legend,li,ol,option,p,span,strong,submit,td,th,tr,ul');
-		if (in_array($name, $tags)) return new H('H::' . $name, $arguments);
+		if (in_array($name, static::$_tags)) return new H('H::' . $name, $arguments);
 		// What if it's an unsupported tag?
 		return null;
 	}
@@ -112,7 +112,7 @@ class HSelect extends HInput {
 	public function __toString() {
 		// Prepare children
 		foreach ($this->_options as $key => $value) {
-			// DOing the following causes strange problems
+			// Doing the following causes strange problems
 			// $child = H::option($value);
 			$child = new H('H::option', array($value));
 			$child->value($key);
