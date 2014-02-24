@@ -3,8 +3,8 @@ Hi There
 
 These are standalone classes that play well with your in-house framework, spaghetti code, etc. So far we have:
 
-* Routing engine (Route)
-* Incremental markup builder with HTML special character preparation (H)
+* Routing engine
+* Incremental markup builder with HTML special character preparation (H class)
 * Input validator that works on deeply nested arrays of data
 
 Router class
