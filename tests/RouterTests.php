@@ -3,7 +3,7 @@
 require('../Router.php');
 
 
-class RouteTests extends PHPUnit_Framework_TestCase {
+class RouterTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
 		$stringFallback = Route::toClassMethod('Controller', 'stringFallback');
 		$intFallback = Route::toClassMethod('Controller', 'intFallback');
@@ -64,17 +64,31 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			$this->assertEquals($output, $routes->dispatch($path));
 		}
 	}
+
+	public function testCallables() {
+		$routes = Routes(
+			'func', Route::toCallable('callableFunction'),
+			'static', Route::toCallable(array('Controller', 'staticMethod')),
+			'instance', Route::toCallable(array(new Controller(), 'instanceMethod')),
+			'controller', Route::toController('Controller', 'instanceMethod')
+		);
+		$paths = array(
+			'/func' => 'wee callable',
+			'/static' => 'static',
+			'/instance' => 'instance',
+			'/controller' => 'instance'
+		);
+		foreach ($paths as $path => $output) {
+			$this->assertEquals($output, $routes->dispatch($path));
+		}
+	}
 }
 
 
 
 
 class Controller {
-	protected $path;
-	public function __construct($path) {
-		$this->path = $path;
-	}
-
+	protected $foo = 'bar';
 	public function stringFallback() {
 		return 'stringFallback';
 	}
@@ -84,6 +98,16 @@ class Controller {
 
 	public function four() {
 		return '404';
+	}
+
+	// For callables tests
+	public static function staticMethod() {
+		return 'static';
+	}
+	public function instanceMethod($params) {
+		// Presense of $this should ensure this method isn't called statically
+		$a = $this->foo;
+		return 'instance';
 	}
 }
 

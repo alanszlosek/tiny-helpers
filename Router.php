@@ -35,17 +35,54 @@ if (!function_exists('Routes')) {
 	}
 }
 
-// Functionality common to the Router and Route classes
-// Meant to be the base class for route tree leaves. They do the handoff from Router to the rest of your application
-class RouteNode {
+class RouteCallable {
 	/*
 	$callable can be:
 
+	// Calls the static class method
 	array('ClassName', 'methodName')
+	// Calls method for the class instance
 	array($classInstance, 'methodName')
+	// Calls the named function
 	'functionName'
+	// Calls the anonymous function
+	function() { ... }
 	*/
 	protected $callable;
+	protected $label;
+
+	public function __construct($callable) {
+		$this->callable = $callable;
+	}
+
+	// Instantiate and run
+	public function run($labels) {
+		$callable = $this->callable;
+		return $callable($labels);
+	}
+
+	public function hasLabel() {
+		return isset($this->label);
+	}
+
+	public function label($label = null) {
+		if ($label == null) return $this->label;
+		$this->label = $label;
+		return $this;
+	}
+}
+class RouteMVCCallable extends RouteCallable {
+	public function run($labels) {
+		$callable = $this->callable;
+		$class = $callable[0];
+		$callable[0] = new $class();
+		return $callable($labels);
+	}
+}
+
+// Functionality common to the Router and Route classes
+// Meant to be the base class for route tree leaves. They do the handoff from Router to the rest of your application
+class RouteNode {
 	protected $label;
 	public $parent;
 
@@ -61,12 +98,6 @@ class RouteNode {
 		if ($label == null) return $this->label;
 		$this->label = $label;
 		return $this;
-	}
-
-	// Instantiate and run
-	public function run($labels) {
-		$callable = $this->callable;
-		return $callable($labels);
 	}
 }
 
@@ -89,7 +120,7 @@ class Router extends RouteNode {
 	public function dispatch($path, $labels = null) {
 		// First run, $path should be a string
 		if (!is_array($path)) {
-            // Could use a method here that can be overridden, to make it easier to pass more info to callables
+			// Could use a method here that can be overridden, to make it easier to pass more info to callables
 			$labels = new stdClass;
 			$labels->__routerInstance = $this;
 			$path = trim($path, '/');
@@ -101,12 +132,7 @@ class Router extends RouteNode {
 
 		// No more path to digest
 		if (!$path) {
-			// If we have no callable, it'll return false (404)
-			if ($this->callable) {
-				return $this->run($labels);
-			} else {
-				return false;
-			}
+			return $this->run($labels);
 		}
 
 		$part = array_shift($path);
@@ -131,6 +157,15 @@ class Router extends RouteNode {
 		}
 	}
 
+	protected function run($labels) {
+		// If we have no callable, it'll return false (404)
+		if ($this->callable) {
+			return $this->callable->run($labels);
+		} else {
+			return false;
+		}
+	}
+
 	// Can override this to handle additional patterns
 	protected function getRoute($key) {
 		if (isset($this->routes[ $key ])) {
@@ -145,7 +180,14 @@ class Router extends RouteNode {
 
 
 	public function toClassMethod($class, $method) {
-		$this->callable = array($class, $method);
+		$this->callable = new RouteMVCCallable(array($class, $method));
+		return $this;
+	}
+	public function toController($class, $method) {
+		return $this->toClassMethod($class, $method);
+	}
+	public function toCallable($callable) {
+		$this->callable = new RouteCallable($callable);
 		return $this;
 	}
 }
@@ -153,10 +195,13 @@ class Router extends RouteNode {
 
 class Route {
 	public static function toClassMethod($class, $method) {
-		return new RouteNode(array($class, $method));
+		return new RouteMVCCallable(array($class, $method));
+	}
+	public static function toController($class, $method) {
+		return Route::toClassMethod($class, $method);
 	}
 	public static function toCallable($callable) {
-		return new RouteNode($callable);
+		return new RouteCallable($callable);
 	}
 }
 
