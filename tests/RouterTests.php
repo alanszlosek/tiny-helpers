@@ -5,8 +5,8 @@ require('../Router.php');
 
 class RouterTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
-		$stringFallback = Route::toClassMethod('Controller', 'stringFallback');
-		$intFallback = Route::toClassMethod('Controller', 'intFallback');
+		$stringFallback = Route::toController('Controller', 'stringFallback');
+		$intFallback = Route::toController('Controller', 'intFallback');
 
 		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
 		// Figured this would allow easy fallback, while being able to override as well
@@ -18,17 +18,17 @@ class RouterTests extends PHPUnit_Framework_TestCase {
 				Routes(
 					'child',
 						Routes(
-							'grandchild', Route::toClassMethod('TestController', 'folders')->label('third')
+							'grandchild', Route::toController('TestController', 'folders')->label('third')
 						)->label('second')
 				)->label('first'),
 			'categories',
 				Routes(
 					':integer',
 						Routes(
-							'edit', Route::toClassMethod('CategoryController', 'edit')->label('action')
-						)->toClassMethod('CategoryController', 'view')->label('id'),
+							'edit', Route::toController('CategoryController', 'edit')->label('action')
+						)->toController('CategoryController', 'view')->label('id'),
 					'create',
-						Route::toClassMethod('CategoryController', 'create'),
+						Route::toController('CategoryController', 'create'),
 					'func',
 						Route::toCallable('callableFunction')
 				)->toClassMethod('CategoryController', 'listing')
@@ -36,12 +36,13 @@ class RouterTests extends PHPUnit_Framework_TestCase {
 
 		$paths = array(
 			// Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead
-			'/' => 'root',
+			//'/' => 'root',
 
 			// Test :string fallback
 			'/fallback' => 'stringFallback',
 			'/123' => 'intFallback',
-			'/fall/back/' => 'stringFallback',
+			// Will 404
+			'/fall/back/' => false,
 
 			// Test assigning names to folders in the URL path
 			'/parent/child/grandchild' => 'parent child grandchild',

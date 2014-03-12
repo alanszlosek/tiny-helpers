@@ -49,7 +49,6 @@ class RouteCallable {
 	function() { ... }
 	*/
 	protected $callable;
-	protected $label;
 
 	public function __construct($callable) {
 		$this->callable = $callable;
@@ -59,16 +58,6 @@ class RouteCallable {
 	public function run($labels) {
 		$callable = $this->callable;
 		return $callable($labels);
-	}
-
-	public function hasLabel() {
-		return isset($this->label);
-	}
-
-	public function label($label = null) {
-		if ($label == null) return $this->label;
-		$this->label = $label;
-		return $this;
 	}
 }
 class RouteMVCCallable extends RouteCallable {
@@ -82,34 +71,41 @@ class RouteMVCCallable extends RouteCallable {
 
 // Functionality common to the Router and Route classes
 // Meant to be the base class for route tree leaves. They do the handoff from Router to the rest of your application
-class RouteNode {
+class Router {
+	protected $handler;
 	protected $label;
 	public $parent;
-
-	public function __construct($callable) {
-		$this->callable = $callable;
-	}
-
-	public function hasLabel() {
-		return isset($this->label);
-	}
-
-	public function label($label = null) {
-		if ($label == null) return $this->label;
-		$this->label = $label;
-		return $this;
-	}
-}
-
-class Router extends RouteNode {
 	public $routes = array();
 
-	public function __construct($routes) {
+	public function __construct($routes = array()) {
 		for ($i = 0; $i < sizeof($routes); $i+=2) {
 			$key = $routes[$i];
 			$route = $routes[$i+1];
 			$route->parent = $this;
 			$this->routes[$key] = $route;
+		}
+	}
+
+	public function hasLabel() {
+		return isset($this->label);
+	}
+	public function label($label = null) {
+		if ($label == null) return $this->label;
+		$this->label = $label;
+		return $this;
+	}
+
+	public function handler($callable = null) {
+		if ($callable == null) return $this->handler;
+		$this->handler = $callable;
+		return $this;
+	}
+	protected function handoff($labels) {
+		// If we have no callable, it'll return false (404)
+		if ($this->handler) {
+			return $this->handler->run($labels);
+		} else {
+			return false;
 		}
 	}
 
@@ -132,7 +128,7 @@ class Router extends RouteNode {
 
 		// No more path to digest
 		if (!$path) {
-			return $this->run($labels);
+			return $this->handoff($labels);
 		}
 
 		$part = array_shift($path);
@@ -153,18 +149,10 @@ class Router extends RouteNode {
 			return $route->dispatch($path, $labels);
 		} else {
 			// If it's not an instance of Router, it SHOULD be an instance of RouteNode
-			return $route->run($labels);
+			return $route->handoff($labels);
 		}
 	}
 
-	protected function run($labels) {
-		// If we have no callable, it'll return false (404)
-		if ($this->callable) {
-			return $this->callable->run($labels);
-		} else {
-			return false;
-		}
-	}
 
 	// Can override this to handle additional patterns
 	protected function getRoute($key) {
@@ -180,28 +168,33 @@ class Router extends RouteNode {
 
 
 	public function toClassMethod($class, $method) {
-		$this->callable = new RouteMVCCallable(array($class, $method));
-		return $this;
+		return $this->handler(new RouteMVCCallable(array($class, $method)));
 	}
 	public function toController($class, $method) {
 		return $this->toClassMethod($class, $method);
 	}
 	public function toCallable($callable) {
-		$this->callable = new RouteCallable($callable);
-		return $this;
+		return $this->handler(new RouteCallable($callable));
 	}
 }
 
 
 class Route {
+	public static $class = 'Router';
+
 	public static function toClassMethod($class, $method) {
-		return new RouteMVCCallable(array($class, $method));
+		return static::toController($class, $method);
 	}
 	public static function toController($class, $method) {
-		return Route::toClassMethod($class, $method);
+		return static::factory()->handler(new RouteMVCCallable(array($class, $method)));
 	}
 	public static function toCallable($callable) {
-		return new RouteCallable($callable);
+		return static::factory()->handler(new RouteCallable($callable));
+	}
+
+	protected static function factory() {
+		$class = static::$class;
+		return new $class();
 	}
 }
 
