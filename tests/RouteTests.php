@@ -3,7 +3,7 @@
 require('../Router.php');
 
 
-class RouterTests extends PHPUnit_Framework_TestCase {
+class RouteTests extends PHPUnit_Framework_TestCase {
 	public function testSimple() {
 		$stringFallback = Route::toController('Controller', 'stringFallback');
 		$intFallback = Route::toController('Controller', 'intFallback');

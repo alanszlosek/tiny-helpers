@@ -7,7 +7,7 @@ These are standalone classes that play well with your in-house framework, spaghe
 * Incremental markup builder with HTML special character preparation (H class)
 * Input validator that works on deeply nested arrays of data
 
-Router class
+Route class
 ----
 
 Example URL: http://abc.com/category/123?offset=2
