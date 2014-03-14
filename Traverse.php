@@ -17,20 +17,15 @@ $nested = array(
 	),
 );
 
-$help = new ArrayTraverser($nested);
-$element = $help->at('TWO', 'Two', 'two');
+$element = Traverse::arrayTo($nested, 'TWO', 'Two', 'two');
 
 
 */
 
-class ArrayTraverser {
-	protected $data = array();
-	public function __construct($data = array()) {
-		$this->data = $data;
-	}
-	public function at() {
+class Traverse {
+	public static function arrayTo() {
 		$args = func_get_args();
-		$values = $this->data;
+		$values = array_shift($args);
 		while ($args) {
 			$key = array_shift($args);
 			$values = $values[ $key ];
