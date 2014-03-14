@@ -18,7 +18,7 @@ $nested = array(
 );
 
 $element = Traverse::arrayTo($nested, 'TWO', 'Two', 'two');
-
+// $element now contains 'There'
 
 */
 
