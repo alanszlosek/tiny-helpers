@@ -84,6 +84,6 @@ Form fields:
 Validate class
 ----
 
-Perhaps you want to validate POST data (maybe you have nest fields with names like "product[1][name]"). Perhaps you need it to play nice with your existing framework or legacy code. Maybe you want the power to construct your own validation functions or regex patters. In that case, Validator is for you.
+Perhaps you want to validate POST data (maybe you have nested fields with names like "product[1][name]"). Perhaps you need it to play nice with your existing framework or legacy code. Maybe you want the power to construct your own validation functions or regex patters. In that case, Validator is for you.
 
 Check tests/ValidateTests.php for example usage
