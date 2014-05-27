@@ -1,21 +1,11 @@
 <?php
 
-/*
-http://www.php-fig.org/psr/psr-4/
-
-To be psr4 compliant, this will need to support mapping of Namespace prefixes. Basically, what to ignore in the namespace
-
-So my loader is less specific about each class, and more about setting a string of base dirs to search within.
-
-
-*/
 class Loader {
-    // Base path for PSR-0 auto-loading .. . without a trailing directory separator
+    // Base path for PSR-0 auto-loading ... without a trailing directory separator
     public $basePSR0 = '';
-    // Tree for PSR-4 auto-loading
+    // Tree for PSR-4 auto-loading ... without a trailing directory separator
     protected $treePSR4 = '';
 
-    // After attempting PSR-4 then PSR-0, we try normal include paths
     public function loadClass($className) {
         $nl = "\n";
 
@@ -33,6 +23,8 @@ class Loader {
     }
 
     // PSR-4
+    // Most of this can go away in favor of the code from:
+    //    https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader-examples.md
     protected function loadPSR4($className) {
         if (!isset($this->treePSR4)) {
             return false;
@@ -81,6 +73,9 @@ class Loader {
 
     // PSR-0
     protected function loadPSR0($className) {
+        if (!isset($this->basePSR0)) {
+            return false;
+        }
         // From the PSR-0 spec
         $className = ltrim($className, '\\');
         $fileName  = $this->basePSR0 . DIRECTORY_SEPARATOR;
