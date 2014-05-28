@@ -7,14 +7,10 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 		$stringFallback = 'Controller->stringFallback';
 		$intFallback = 'Controller->intFallback';
 
-		// You can nest as deeply as you want ... But the first Route::To that matches, is the one that'll be called
-		// Figured this would allow easy fallback, while being able to override as well
-
         /*
-        An attempt to cut down on the number of objects involved in the route tree.
-        Having only 1 instance of Route at the top-level (via the Routes() function) is nice.
-        It allows for an all array data structure, and easy subclassing of Route ... you only
-        have to instantiate the subclass once, passing in the route tree.
+        Using a route tree composed purely of associative arrays should save on the memory.
+        And having only 1 instance of a Route class at the top-level makes it easy to subclass Route,
+        since you only have to instantiate the class once.
         */
 		$routes = array(
             '__to' => 'TestController->index',
