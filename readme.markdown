@@ -12,18 +12,19 @@ Route class
 
 Example URL: http://abc.com/category/123?offset=2
 
-Make your routes data structure:
+Make your route tree using associative arrays.
 
-	$routes = Routes(
-		'category',
-			Routes(
-				// :integer is an internal alias that matches integers
-				// $path array will be passed to OrderController constructor
-				// the labels given to URL path folders will used in an object like this: {module:'category',id:123}
-				// it will be passed as the first parameter to the callable (class method)
-				':integer' => Route::toClassMethod('OrderController', 'byId')->label('id'),
-			)->label('module')
-	);
+	$routes = new Route(array(
+		'category' => array(
+            '__label' => 'module',
+            // :integer is an internal alias that matches integers
+            ':integer' => array(
+                // Specify which controller method to call
+                '__to' => 'OrderController->byId',
+                '__label' => 'id'
+            ),
+        )
+	));
 
 Do the following to your request URL:
 
@@ -35,6 +36,8 @@ Now pass it to dispatch():
 	$path = '/category/123';
 	// dispatch() returns whatever your controller method returns
 	echo $routes->dispatch($path);
+    // OrderController will be instantiated, and it's byId() method will be called
+    // with an object that looks like this: {module:'category',id:123}
 
 See the unit tests for a more complex example.
 
