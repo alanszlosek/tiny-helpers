@@ -39,7 +39,7 @@ class Route {
 	public $routes = array();
 
 	public function __construct($routes = array()) {
-        $this->routes = $routes;
+		$this->routes = $routes;
 	}
 
 	/*
