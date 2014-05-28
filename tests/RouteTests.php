@@ -61,6 +61,9 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 
 			// Test assigning names to folders in the URL path
 			'/parent/child/grandchild' => 'parent child grandchild',
+            // Make sure incomplete paths trigger 404
+			'/parent/child' => false,
+			'/parent' => false,
 
 			'/categories' => 'list categories',
 			'/categories/' => 'list categories',
@@ -74,6 +77,11 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 			'/categories/123/edit/' => 'edit category 123',
 			'/categories/123/move' => false,
 			'/categories/123/move/' => false,
+
+            // URL paths shouldn't contain internal keys or aliases
+            // Make sure they don't match
+            '/:integer' => false,
+            '/categories/__to' => false,
 		);
 
 		foreach ($paths as $path => $output) {

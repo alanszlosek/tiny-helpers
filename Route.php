@@ -1,7 +1,4 @@
 <?php
-
-namespace Route;
-
 /*
 Route - standalone routing engine that dispatches to controllers
 Licensed under MIT. See LICENSE.txt for details.
@@ -11,7 +8,8 @@ EXAMPLE
 
 URL: http://abc.com/category/123/?offset=2
 
-Make your routes data structure. Routes() accepts parameters in pairs. The first matches a URL folder path, the second is the configuration for that folder.
+Make your routes data structure. Routes() accepts parameters in pairs.
+The first matches a URL folder path, the second is the configuration for that folder.
 
 	$routes = new Route(array(
 		'category' => array(
@@ -24,16 +22,24 @@ Make your routes data structure. Routes() accepts parameters in pairs. The first
 		)
 	));
 
-Dispatch by passing the path portion of your URL to dispatch, without the scheme, domain or query string.
+Dispatch using the URL path, without the scheme, domain or query string.
 Ensure no repeat slashes (/categories//something///) before calling dispatch().
 
-	$path = "/category/123/";
+    $path = "/category/123/";
 	// dispatch() returns whatever your controller method returns
 	echo $routes->dispatch($path);
 */
 
-// Functionality common to the Router and Route classes
-// Meant to be the base class for route tree leaves. They do the handoff from Router to the rest of your application
+namespace Route;
+
+
+/*
+Extend Route if you want to add path aliases to match URL folder segments.
+Route comes with :integer and :string, but feel free to override getRoute().
+
+You may also want to dispatch to static class methods, or functions instead
+of controller methods. If so, implement your own handoff() method.
+ */
 class Route {
 	public $parent;
 	public $routes = array();
@@ -52,10 +58,6 @@ class Route {
 		return $o->$method($labels);
 	}
 
-	/**
-	 * This method is called recursively.
-	 * It walks $path, follwing each node from the $routes tree that matches it
-	 */
 	public function dispatch($path) {
 		// First run, $path will be a string
 		$path = trim($path, '/');
@@ -70,12 +72,17 @@ class Route {
 		return $this->recursiveDispatch($path, $this->routes, $labels);
 	}
 
+	/**
+	 * This method is called recursively.
+	 * It walks $path, following each node from the $routes tree that matches it
+	 */
 	protected function recursiveDispatch($path, $routes, $labels) {
 		// No more path to digest
 		if (!$path) {
 			if (isset($routes['__to'])) {
 				return $this->handoff($routes['__to'], $labels);
 			} else {
+                // Route tree node has no handoff destination, that's a 404
 				return false;
 			}
 		}
@@ -87,7 +94,7 @@ class Route {
 			return false;
 		}
 
-		// If the current route level has been given a label, use it to label the current path portion
+		// If the current route tree node has a label, use it to label the current path portion
 		if (isset($route['__label'])) {
 			$label = $route['__label'];
 			$labels->$label = $part;
@@ -102,7 +109,7 @@ class Route {
 	protected function getRoute($key, $routes) {
 		// Make sure not requesting a key prefixed with '__'
 		// Those keys are for Route internals
-		if (substr($key, 0, 2) == '__') {
+		if (substr($key, 0, 1) == ':' || substr($key, 0, 2) == '__') {
 			return null;
 		}
 		if (isset($routes[ $key ])) {
