@@ -7,44 +7,43 @@ class RouteTests extends PHPUnit_Framework_TestCase {
 		$stringFallback = 'Controller->stringFallback';
 		$intFallback = 'Controller->intFallback';
 
-        /*
-        Using a route tree composed purely of associative arrays should save on the memory.
-        And having only 1 instance of a Route class at the top-level makes it easy to subclass Route,
-        since you only have to instantiate the class once.
-        */
+		/*
+		Using a route tree composed purely of associative arrays should save on the memory.
+		And having only 1 instance of a Route class at the top-level makes it easy to subclass Route,
+		since you only have to instantiate the class once.
+		*/
 		$routes = array(
-            '__to' => 'TestController->index',
+			'__to' => 'TestController->index',
 			':string' => array('__to' => $stringFallback),
 			':integer' => array('__to' => $intFallback),
 			// no root method to run
 			'parent' => array(
-                '__label' => 'first',
-                'child' => array(
-                    '__label' => 'second',
-                    'grandchild' => array(
-                        '__label' => 'third',
-                        '__to' => 'TestController->folders'
-                    )
-                ),
-            ),
+				'__label' => 'first',
+				'child' => array(
+					'__label' => 'second',
+					'grandchild' => array(
+						'__label' => 'third',
+						'__to' => 'TestController->folders'
+					)
+				),
+			),
 			'categories' => array(
-                '__to' => 'CategoryController->listing',
-                ':integer' => array(
-                    '__label' => 'id',
-                    '__to' => 'CategoryController->view',
-                    'edit' => array(
-                        '__label' => 'action',
-                        '__to' => 'CategoryController->edit',
-                    )
-                ),
-                'create' => array(
-                    '__to' => 'CategoryController->create',
-                ),
-            ),
-            'subtree' => array()
+				'__to' => 'CategoryController->listing',
+				':integer' => array(
+					'__label' => 'id',
+					'__to' => 'CategoryController->view',
+					'edit' => array(
+						'__label' => 'action',
+						'__to' => 'CategoryController->edit',
+					)
+				),
+				'create' => array(
+					'__to' => 'CategoryController->create',
+				),
+			),
 		);
-        // Use base Route class, or your own subclass
-        $routes = new Route\Route($routes);
+		// Use base Route class, or your own subclass
+		$routes = new Route\Route($routes);
 
 
 		$paths = array(

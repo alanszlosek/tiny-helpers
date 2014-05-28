@@ -18,9 +18,9 @@ Make your routes data structure. Routes() accepts parameters in pairs. The first
 			// :integer is an internal alias that matches integers
 			// byId() will be called with an object that looks like this JSON: {id:123}
 			':integer' => array(
-                '__to' => 'OrderController->byId',
-                '__label' => 'id'
-            )
+				'__to' => 'OrderController->byId',
+				'__label' => 'id'
+			)
 		)
 	));
 
@@ -42,14 +42,14 @@ class Route {
         $this->routes = $routes;
 	}
 
-    /*
-    Extend the Route class if you need the ability to dispatch to functions or static methods
-    */
+	/*
+	Extend the Route class if you need the ability to dispatch to functions or static methods
+	*/
 	protected function handoff($to, $labels) {
-        // We assume handoff to an MVC style controller
-        list($class, $method) = explode('->', $to);
-        $o = new $class();
-        return $o->$method($labels);
+		// We assume handoff to an MVC style controller
+		list($class, $method) = explode('->', $to);
+		$o = new $class();
+		return $o->$method($labels);
 	}
 
 	/**
@@ -58,26 +58,26 @@ class Route {
 	 */
 	public function dispatch($path) {
 		// First run, $path will be a string
-        $path = trim($path, '/');
-        // Start label object
-        $labels = new \stdClass;
-        $labels->__routerInstance = $this;
-        $labels->__pathString = $path;
-        // Don't explode an empty string ... it does weird things
-        $path = ($path ? explode('/', $path) : array());
-        $labels->__pathArray = $path;
+		$path = trim($path, '/');
+		// Start label object
+		$labels = new \stdClass;
+		$labels->__routerInstance = $this;
+		$labels->__pathString = $path;
+		// Don't explode an empty string ... it does weird things
+		$path = ($path ? explode('/', $path) : array());
+		$labels->__pathArray = $path;
 
-        return $this->recursiveDispatch($path, $this->routes, $labels);
-    }
+		return $this->recursiveDispatch($path, $this->routes, $labels);
+	}
 
-    protected function recursiveDispatch($path, $routes, $labels) {
+	protected function recursiveDispatch($path, $routes, $labels) {
 		// No more path to digest
 		if (!$path) {
-            if (isset($routes['__to'])) {
-                return $this->handoff($routes['__to'], $labels);
-            } else {
-                return false;
-            }
+			if (isset($routes['__to'])) {
+				return $this->handoff($routes['__to'], $labels);
+			} else {
+				return false;
+			}
 		}
 
 		$part = array_shift($path);
@@ -94,17 +94,17 @@ class Route {
 		}
 
 		// If there is no more path to digest, this next call to dispatch will trigger the callable
-        return $this->recursiveDispatch($path, $route, $labels);
+		return $this->recursiveDispatch($path, $route, $labels);
 	}
 
 
 	// Can override this to handle additional patterns
 	protected function getRoute($key, $routes) {
-        // Make sure not requesting a key prefixed with '__'
-        // Those keys are for Route internals
-        if (substr($key, 0, 2) == '__') {
-            return null;
-        }
+		// Make sure not requesting a key prefixed with '__'
+		// Those keys are for Route internals
+		if (substr($key, 0, 2) == '__') {
+			return null;
+		}
 		if (isset($routes[ $key ])) {
 			return $routes[ $key ];
 		} elseif (isset($routes[':integer']) && preg_match('/^[0-9]+$/', $key)) {
