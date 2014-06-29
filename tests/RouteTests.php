@@ -3,12 +3,12 @@ namespace TinyHelpers\Tests;
 
 require '../src/TinyHelpers/Route.php';
 
-class RouteTests extends PHPUnit_Framework_TestCase
+class RouteTests extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
-        $stringFallback = 'Controller->stringFallback';
-        $intFallback = 'Controller->intFallback';
+        $stringFallback = '\\TinyHelpers\\Tests\\Controller->stringFallback';
+        $intFallback = '\\TinyHelpers\\Tests\\Controller->intFallback';
 
         /*
         Using a route tree composed purely of associative arrays should save on the memory.
@@ -16,7 +16,7 @@ class RouteTests extends PHPUnit_Framework_TestCase
         since you only have to instantiate the class once.
         */
         $routes = array(
-            '__to' => 'TestController->index',
+            '__to' => '\\TinyHelpers\\Tests\\TestController->index',
             ':string' => array('__to' => $stringFallback),
             ':integer' => array('__to' => $intFallback),
             // no root method to run
@@ -26,27 +26,27 @@ class RouteTests extends PHPUnit_Framework_TestCase
                     '__label' => 'second',
                     'grandchild' => array(
                         '__label' => 'third',
-                        '__to' => 'TestController->folders'
+                        '__to' => '\\TinyHelpers\\Tests\\TestController->folders'
                     )
                 ),
             ),
             'categories' => array(
-                '__to' => 'CategoryController->listing',
+                '__to' => '\\TinyHelpers\\Tests\\CategoryController->listing',
                 ':integer' => array(
                     '__label' => 'id',
-                    '__to' => 'CategoryController->view',
+                    '__to' => '\\TinyHelpers\\Tests\\CategoryController->view',
                     'edit' => array(
                         '__label' => 'action',
-                        '__to' => 'CategoryController->edit',
+                        '__to' => '\\TinyHelpers\\Tests\\CategoryController->edit',
                     )
                 ),
                 'create' => array(
-                    '__to' => 'CategoryController->create',
+                    '__to' => '\\TinyHelpers\\Tests\\CategoryController->create',
                 ),
             ),
         );
         // Use base Route class, or your own subclass
-        $routes = new Route\Route($routes);
+        $routes = new \TinyHelpers\Route($routes);
 
         $paths = array(
             // Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead
