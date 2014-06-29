@@ -2,10 +2,11 @@
 namespace TinyHelpers\tests;
 
 require '../src/TinyHelpers/View.php';
+use TinyHelpers\View;
 
 $globalVar = 'hello';
 
-class ViewTests extends PHPUnit_Framework_TestCase
+class ViewTests extends \PHPUnit_Framework_TestCase
 {
     // Make sure globals aren't accessible within template
     public function testSimple()
@@ -15,7 +16,7 @@ class ViewTests extends PHPUnit_Framework_TestCase
 
         $globalVar = 'hellos';
 
-        $data = new stdClass;
+        $data = new \stdClass;
         $data->test = $this;
         $out = View::file('view-template.php', $data);
 

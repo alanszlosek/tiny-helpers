@@ -3,7 +3,10 @@ namespace TinyHelpers\tests;
 
 require '../src/TinyHelpers/Validate.php';
 
-class ValidateTests extends PHPUnit_Framework_TestCase
+use \TinyHelpers\Validate;
+use \TinyHelpers\Validator;
+
+class ValidateTests extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {

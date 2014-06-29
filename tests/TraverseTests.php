@@ -3,7 +3,7 @@ namespace TinyHelpers\tests;
 
 require '../src/TinyHelpers/Traverse.php';
 
-class TraverseTests extends PHPUnit_Framework_TestCase
+class TraverseTests extends \PHPUnit_Framework_TestCase
 {
     public function testSimple()
     {
@@ -27,7 +27,7 @@ class TraverseTests extends PHPUnit_Framework_TestCase
         foreach ($tests as $val => $args) {
             $using = $args;
             array_unshift($using, $nested);
-            $a = call_user_func_array(array('Traverse', 'arrayTo'), $using);
+            $a = call_user_func_array(array('\\TinyHelpers\\Traverse', 'arrayTo'), $using);
             $this->assertEquals($val, $a);
         }
     }
