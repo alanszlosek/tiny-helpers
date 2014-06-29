@@ -1,24 +1,26 @@
 <?php
+namespace TinyHelpers\tests;
 
-require('../View.php');
+require '../src/TinyHelpers/View.php';
 
 $globalVar = 'hello';
 
-class ViewTests extends PHPUnit_Framework_TestCase {
-	// Make sure globals aren't accessible within template
-	public function testSimple() {
-		global $globalVar;
-		global $anotherGlobalVar;
+class ViewTests extends PHPUnit_Framework_TestCase
+{
+    // Make sure globals aren't accessible within template
+    public function testSimple()
+    {
+        global $globalVar;
+        global $anotherGlobalVar;
 
-		$globalVar = 'hellos';
+        $globalVar = 'hellos';
 
-		$data = new stdClass;
-		$data->test = $this;
-		$out = View::file('view-template.php', $data);
+        $data = new stdClass;
+        $data->test = $this;
+        $out = View::file('view-template.php', $data);
 
-		$this->assertEquals('hellos', $globalVar);
-		$this->assertFalse(isset($anotherGlobalVar));
-		$this->assertEquals('', $out);
-	}
+        $this->assertEquals('hellos', $globalVar);
+        $this->assertFalse(isset($anotherGlobalVar));
+        $this->assertEquals('', $out);
+    }
 }
-

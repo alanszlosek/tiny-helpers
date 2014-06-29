@@ -1,12 +1,16 @@
 <?php
 
-class Loader {
+namespace TinyHelpers;
+
+class Loader
+{
     // Base path for PSR-0 auto-loading ... without a trailing directory separator
     public $basePSR0 = '';
     // Tree for PSR-4 auto-loading ... without a trailing directory separator
     protected $treePSR4 = '';
 
-    public function loadClass($className) {
+    public function loadClass($className)
+    {
         $nl = "\n";
 
         $eh = $this->loadPSR4($className);
@@ -25,7 +29,8 @@ class Loader {
     // PSR-4
     // Most of this can go away in favor of the code from:
     //    https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader-examples.md
-    protected function loadPSR4($className) {
+    protected function loadPSR4($className)
+    {
         if (!isset($this->treePSR4)) {
             return false;
         }
@@ -52,10 +57,12 @@ class Loader {
                 return $full;
             }
         }
+
         return false;
    }
 
-    public function addNamespace($prefix, $path) {
+    public function addNamespace($prefix, $path)
+    {
         $parts = explode('\\', trim($prefix, '\\'));
         $tree = &$this->treePSR4;
 
@@ -70,9 +77,9 @@ class Loader {
         $tree['__paths'][] = $path;
     }
 
-
     // PSR-0
-    protected function loadPSR0($className) {
+    protected function loadPSR0($className)
+    {
         if (!isset($this->basePSR0)) {
             return false;
         }
@@ -89,18 +96,22 @@ class Loader {
 
         if (file_exists($fileName)) {
             require($fileName);
+
             return true;
         }
+
         return false;
     }
 
-    protected function requireFile($file) {
+    protected function requireFile($file)
+    {
         if (file_exists($file)) {
             require($file);
+
             return true;
         }
+
         return false;
     }
 
 }
-

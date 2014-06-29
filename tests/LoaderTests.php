@@ -1,27 +1,31 @@
 <?php
+namespace TinyHelpers\Tests;
 
-require_once('../Loader.php');
+require_once '../src/TinyHelpers/Loader.php';
 
-class MockLoader extends Loader {
+class MockLoader extends \TinyHelpers\Loader
+{
     public $files = array();
 
-    protected function requireFile($file) {
+    protected function requireFile($file)
+    {
         return in_array($file, $this->files);
     }
 }
 
-class RouteTests extends PHPUnit_Framework_TestCase {
-
+class RouteTests extends \PHPUnit_Framework_TestCase
+{
     // Test PSR-0 including
-	public function testPSR0() {
-        $loader = new Loader();
+    public function testPSR0()
+    {
+        $loader = new \TinyHelpers\Loader();
         $loader->basePSR0 = __DIR__ . DIRECTORY_SEPARATOR . 'Loader';
         spl_autoload_register(array($loader, 'loadClass'));
 
         $classes = array(
-            'Aardvark' => 'ants', // root namespace
-            '\\Aardvark\\Boardwalk' => 'water',
-            '\\Aardvark\\Boardwalk\\Cat' => 'scratch',
+            '\\TinyHelpers\\Tests\\Loader\\Aardvark' => 'ants', // root namespace
+            '\\TinyHelpers\\Tests\\Loader\\Aardvark\\Boardwalk' => 'water',
+            '\\TinyHelpers\\Tests\\Loader\\Aardvark\\Boardwalk\\Cat' => 'scratch',
         );
 
         foreach ($classes as $class => $ret) {
@@ -31,7 +35,8 @@ class RouteTests extends PHPUnit_Framework_TestCase {
     }
 
     // Test PSR-4 including
-	public function testPSR4() {
+    public function testPSR4()
+    {
         $loader = new Loader();
         $loader->addNamespace('Prefixed', __DIR__ . DIRECTORY_SEPARATOR . 'Loader/Aardvark');
         $loader->addNamespace('GeneratedNamespace', __DIR__ . DIRECTORY_SEPARATOR . 'Loader' . DIRECTORY_SEPARATOR . 'generated/GeneratedNamespace');
@@ -50,7 +55,8 @@ class RouteTests extends PHPUnit_Framework_TestCase {
         }
     }
 
-    public function testPSR4two() {
+    public function testPSR4two()
+    {
         $loader = new MockLoader();
 
         $loader->files = array(
@@ -115,17 +121,16 @@ class RouteTests extends PHPUnit_Framework_TestCase {
         $this->assertSame($expect, $actual);
     }
 
-
 /*
     // Test PHP include paths
-	public function testSimple() {
+    public function testSimple()
+    {
         Loader::$base = __DIR__ . DIRECTORY_SEPARATOR . 'Loader';
         Loader::$paths = array(
                 'generated',
         );
 //var_dump(Loader::$base);exit;
         spl_autoload_register(array('Loader', 'loadClass'));
-
 
         $classes = array(
             'Aardvark' => 'ants', // root namespace

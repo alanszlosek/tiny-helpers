@@ -1,9 +1,11 @@
 <?php
 
-namespace GeneratedNamespace;
+namespace TinyHelpers\Tests\Loader\GeneratedNamespace;
 
-class GenClass {
-    public function ident() {
+class GenClass
+{
+    public function ident()
+    {
         return 'manufactured';
     }
 }
