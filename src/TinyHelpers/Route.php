@@ -43,6 +43,7 @@ class Route
 {
     public $parent;
     public $routes = array();
+    protected $namespacePrefix = null;
 
     public function __construct($routes = array())
     {
@@ -56,9 +57,15 @@ class Route
     {
         // We assume handoff to an MVC style controller
         list($class, $method) = explode('->', $to);
+        $class = $this->namespacePrefix . $class;
         $o = new $class();
 
         return $o->$method($labels);
+    }
+
+    // Prefix to prepend to controller names
+    public function namespacePrefix($prefix) {
+        $this->namespacePrefix = $prefix;
     }
 
     public function dispatch($path)
