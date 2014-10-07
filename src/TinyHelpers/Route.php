@@ -91,12 +91,21 @@ class Route
     {
         // No more path to digest
         if (!$path) {
+            // Might need a __delegate check here, too
             if (isset($routes['__to'])) {
                 return $this->handoff($routes['__to'], $labels);
             } else {
                 // Route tree node has no handoff destination, that's a 404
                 return false;
             }
+        }
+
+        // delegating to another Route instance
+        if (isset($routes['__delegate'])) {
+            // Pass to another Route instance, but set the read-only starting prefix
+            $class = $routes['__delegate'];
+            $router = new $class();
+            return $router->dispatch(implode('/', $path));
         }
 
         $part = array_shift($path);

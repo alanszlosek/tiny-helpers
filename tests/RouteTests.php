@@ -10,11 +10,9 @@ class RouteTests extends \PHPUnit_Framework_TestCase
         $stringFallback = '\\TinyHelpers\\Tests\\Controller->stringFallback';
         $intFallback = '\\TinyHelpers\\Tests\\Controller->intFallback';
 
-        /*
-        Using a route tree composed purely of associative arrays should save on the memory.
-        And having only 1 instance of a Route class at the top-level makes it easy to subclass Route,
-        since you only have to instantiate the class once.
-        */
+        // Using a route tree composed purely of associative arrays should save on the memory.
+        // And having only 1 instance of a Route class at the top-level makes it easy to subclass Route,
+        // since you only have to instantiate the class once.
         $routes = array(
             '__to' => '\\TinyHelpers\\Tests\\TestController->index',
             ':string' => array('__to' => $stringFallback),
@@ -46,7 +44,7 @@ class RouteTests extends \PHPUnit_Framework_TestCase
             ),
         );
         // Use base Route class, or your own subclass
-        $routes = new \TinyHelpers\Route($routes);
+        $router = new \TinyHelpers\Route($routes);
 
         $paths = array(
             // Test our base route, triggered when the path is empty. Make sure :string isn't triggered instead
@@ -87,8 +85,30 @@ class RouteTests extends \PHPUnit_Framework_TestCase
         );
 
         foreach ($paths as $path => $output) {
-            $this->assertEquals($output, $routes->dispatch($path));
+            $this->assertEquals($output, $router->dispatch($path));
         }
+    }
+
+
+    public function testFrontRouter() {
+        $routes = array(
+            'categories' => array(
+                '__to' => '\\TinyHelpers\\Tests\\CategoryController->listing',
+            ),
+            'orders' => array(
+                '__delegate' => '\\TinyHelpers\\Tests\\MyRoute'
+            )
+        );
+        $router = new \TinyHelpers\Route($routes);
+
+        $paths = array(
+            '/categories' => 'list categories',
+            '/orders/listing' => 'delegated order listing'
+        );
+        foreach ($paths as $path => $output) {
+            $this->assertEquals($output, $router->dispatch($path));
+        }
+
     }
 }
 
@@ -141,5 +161,27 @@ class CategoryController extends Controller
     public function edit($params)
     {
         return $params->action . ' category ' . $params->id;
+    }
+}
+
+// testDelegatedRoute
+class MyRoute extends \TinyHelpers\Route {
+    public function __construct() {
+        $routes = array(
+            '__to' => '\\TinyHelpers\\Tests\\OrderController->index',
+            'listing' => array(
+                '__to' => '\\TinyHelpers\\Tests\\OrderController->listing',
+            )
+        );
+        parent::__construct($routes);
+    }
+}
+
+class OrderController extends Controller {
+    public function index($params = null) {
+        return 'delegated order index';
+    }
+    public function listing($params = null) {
+        return 'delegated order listing';
     }
 }
