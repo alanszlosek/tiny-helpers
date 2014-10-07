@@ -1,6 +1,6 @@
 <?php
 
-namespace TinyHelpers\tests\Loader\Aardvark\Boardwalk;
+namespace Aardvark\Boardwalk;
 
 class Cat
 {

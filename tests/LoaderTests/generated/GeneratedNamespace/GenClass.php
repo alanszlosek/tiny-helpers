@@ -1,6 +1,6 @@
 <?php
 
-namespace TinyHelpers\Tests\Loader\GeneratedNamespace;
+namespace GeneratedNamespace;
 
 class GenClass
 {

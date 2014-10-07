@@ -1,6 +1,6 @@
 <?php
 
-namespace TinyHelpers\tests\Loader\Aardvark;
+namespace Aardvark;
 
 class Boardwalk
 {

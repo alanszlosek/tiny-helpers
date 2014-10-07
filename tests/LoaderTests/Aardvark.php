@@ -1,5 +1,4 @@
 <?php
-namespace TinyHelpers\tests\Loader;
 
 class Aardvark
 {
