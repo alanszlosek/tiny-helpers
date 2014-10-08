@@ -14,6 +14,7 @@ class RouteTests extends \PHPUnit_Framework_TestCase
         $loader->register();
 
         $classes = array(
+            // This class has no namespace, but it matches our "Aardvark" namespace prefix. Kinda quirky.
             'Aardvark' => 'ants',
             'Aardvark\\Boardwalk' => 'water',
             'Aardvark\\Boardwalk\\Cat' => 'scratch',
