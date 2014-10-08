@@ -41,7 +41,6 @@ of controller methods. If so, implement your own handoff() method.
  */
 class Route
 {
-    public $parent;
     public $routes = array();
     protected $namespacePrefix = null;
 
@@ -80,15 +79,29 @@ class Route
         $path = ($path ? explode('/', $path) : array());
         $labels->__pathArray = $path;
 
-        return $this->recursiveDispatch($path, $this->routes, $labels);
+        return $this->recursiveDispatch($path, $labels);
     }
 
     /**
      * This method is called recursively.
      * It walks $path, following each node from the $routes tree that matches it
      */
-    protected function recursiveDispatch($path, $routes, $labels)
+    protected function recursiveDispatch($path, $labels, $routes = null)
     {
+        if (is_null($routes)) {
+            $routes = $this->routes;
+        }
+
+        // Should we delegate to another Route instance?
+        if (isset($routes['__delegateTo'])) {
+            // Pass to another Route instance, but set the read-only starting prefix
+            $class = $routes['__delegateTo'];
+            $router = new $class($this);
+            $labels->__routerInstance = $router;
+            // What if this router needs the path up to this point?
+            return $router->recursiveDispatch($path, $labels);
+        }
+
         // No more path to digest
         if (!$path) {
             // Might need a __delegate check here, too
@@ -98,14 +111,6 @@ class Route
                 // Route tree node has no handoff destination, that's a 404
                 return false;
             }
-        }
-
-        // delegating to another Route instance
-        if (isset($routes['__delegate'])) {
-            // Pass to another Route instance, but set the read-only starting prefix
-            $class = $routes['__delegate'];
-            $router = new $class();
-            return $router->dispatch(implode('/', $path));
         }
 
         $part = array_shift($path);
@@ -122,7 +127,7 @@ class Route
         }
 
         // If there is no more path to digest, this next call to dispatch will trigger the callable
-        return $this->recursiveDispatch($path, $route, $labels);
+        return $this->recursiveDispatch($path, $labels, $route);
     }
 
     // Can override this to handle additional patterns

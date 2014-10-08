@@ -96,7 +96,7 @@ class RouteTests extends \PHPUnit_Framework_TestCase
                 '__to' => '\\TinyHelpers\\Tests\\CategoryController->listing',
             ),
             'orders' => array(
-                '__delegate' => '\\TinyHelpers\\Tests\\MyRoute'
+                '__delegateTo' => '\\TinyHelpers\\Tests\\MyRoute'
             )
         );
         $router = new \TinyHelpers\Route($routes);
@@ -166,14 +166,14 @@ class CategoryController extends Controller
 
 // testDelegatedRoute
 class MyRoute extends \TinyHelpers\Route {
-    public function __construct() {
+    public function __construct($parent = null) {
         $routes = array(
             '__to' => '\\TinyHelpers\\Tests\\OrderController->index',
             'listing' => array(
                 '__to' => '\\TinyHelpers\\Tests\\OrderController->listing',
             )
         );
-        parent::__construct($routes);
+        parent::__construct($routes, $parent);
     }
 }
 
