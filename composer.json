@@ -1,4 +1,5 @@
 {
+    "name": "tiny-helpers",
     "autoload": {
         "psr-4": {"TinyHelpers\\": "src/TinyHelpers/"}
     }
