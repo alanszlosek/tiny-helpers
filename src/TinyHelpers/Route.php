@@ -96,6 +96,7 @@ class Route
         if (isset($routes['__delegateTo'])) {
             // Pass to another Route instance, but set the read-only starting prefix
             $class = $routes['__delegateTo'];
+            // TODO: Might like to delegate to an existing instance without instantiating here
             $router = new $class($this);
             $labels->__routerInstance = $router;
             // What if this router needs the path up to this point?
