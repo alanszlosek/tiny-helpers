@@ -1,5 +1,5 @@
 {
-    "name": "tiny-helpers",
+    "name": "alanszlosek/tiny-helpers",
     "autoload": {
         "psr-4": {"TinyHelpers\\": "src/TinyHelpers/"}
     }
