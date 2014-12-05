@@ -35,13 +35,13 @@ class Installer {
         $nl = "\n";
         $out = '<?php' . $nl;
         // Should we also install and require the TinyLoader?
-        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/Installer.php);" . $nl;
+        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyLoader.php);" . $nl;
         $out .= '$loader = new \\TinyHelpers\\TinyLoader();' . $nl;
         foreach (self::$namespaces as $prefix => $path) {
             $out .= '$loader->setNamespacePath' . "('$prefix','$path');" . $nl;
         }
         $out .= '$loader->register();' . $nl;
-        file_put_contents('tp-autoload.php', $out);
+        file_put_contents('thi-autoload.php', $out);
     }
 
     protected static function _install($dir) {
