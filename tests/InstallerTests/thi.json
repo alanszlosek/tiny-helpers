@@ -1,0 +1,13 @@
+{
+    "namespaces": {
+        "Testing": "src/Testing"
+    },
+    "dependencies": {
+        "TinyHelpers": {
+            "git": "https://github.com/alanszlosek/tiny-helpers.git"
+        },
+        "Collections": {
+            "git": "https://github.com/alanszlosek/collections.git"
+        }
+    }
+}
