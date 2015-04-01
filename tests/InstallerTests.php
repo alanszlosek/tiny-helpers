@@ -11,7 +11,8 @@ class InstallerTests extends \PHPUnit_Framework_TestCase
         The goal is to make sure Collection's dependency upon TinyHelpers is satisfied by the existing installation.
         */
         $lines = shell_exec('cd InstallerTests; ./test.sh');
-        var_dump($lines);
         // Verify thi-autoload.php
+        require('InstallerTests/thi-autoload.php');
+        $this->assertEquals('DefaultPassword', \Collections\Application::$password);
     }
 }

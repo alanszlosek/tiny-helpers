@@ -21,7 +21,7 @@ Deps, Installer, Packager ... not sure what to call it
 }
 
 */
-define('PACKAGER_FILE', 'thi.json'); // stands for Tiny Helpers Installer
+define('INSTALLER_FILE', 'thi.json'); // stands for Tiny Helpers Installer
 
 class Installer {
     protected static $seen = array(); // We keep track of dependency locations, so we don't fetch the same location more than once
@@ -30,8 +30,7 @@ class Installer {
 
     public static function debug($message) {
         if (self::$debugging) {
-            // Print to stderr, ideally
-            echo $message . "\n";
+            trigger_error($message);
         }
     }
     public static function install($dir) {
@@ -41,25 +40,29 @@ class Installer {
         $out = '<?php' . $nl;
         // Should we also install and require the TinyLoader?
         // Ideally we'd auto-add TinyHelpers as a dependency
-        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyLoader.php);" . $nl;
+        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyLoader.php');" . $nl;
         $out .= '$loader = new \\TinyHelpers\\TinyLoader();' . $nl;
         foreach (self::$namespaces as $prefix => $path) {
             $out .= '$loader->setNamespacePath' . "('$prefix','$path');" . $nl;
         }
         $out .= '$loader->register();' . $nl;
-        file_put_contents('thi-autoload.php', $out);
+        $autoload = $dir . '/thi-autoload.php';
+        self::debug('Creating ' . $autoload);
+        file_put_contents($autoload, $out);
     }
 
     protected static function _install($dir) {
-        $file = $dir . DIRECTORY_SEPARATOR . PACKAGER_FILE;
+        $file = $dir . DIRECTORY_SEPARATOR . INSTALLER_FILE;
         if (!file_exists($file)) {
             // TODO: Mention which directory we're looking in
-            die(PACKAGER_FILE . ' not found in '. $dir);
+            self::debug(INSTALLER_FILE . ' not found in '. $dir);
+            return false;
         }
 
         $json = file_get_contents($file);
         if (!$json) {
-            die('empty');
+            self::debug(INSTALLER_FILE . ' is empty '. $dir);
+            return false;
         }
         $data = json_decode($json, false);
 
@@ -75,7 +78,7 @@ class Installer {
         }
 
         if (isset($data->dependencies)) {
-            foreach ($data->dependencies as $name => $lib) {
+            foreach ($data->dependencies as $name => $sources) {
                 //$folders = preg_split("@[/\\]+@", $name);
                 $folders = explode('/', $name);
                 $folders = array_filter($folders);
@@ -83,45 +86,45 @@ class Installer {
                 $destination = implode(DIRECTORY_SEPARATOR, $folders);
 
 
-                // Have we already fetched this dependency?
-                if (isset($lib->git) && isset(static::$seen[ $lib->git ])) {
-                    static::debug('Already loaded, skipping ' . $lib->git);
-                    continue;
-                }
+                foreach ($sources as $source_type => $source_path) {
+                    // Have we already fetched this dependency?
+                    if (isset(static::$seen[ $source_path ])) {
+                        static::debug('Already loaded, skipping ' . $source_path);
+                        continue;
+                    }
 
-                // If the folder exists, we likely already fetched it
-                if (!file_exists($destination)) {
-                    mkdir($destination, 0755, true); // recursively
-                    // Try git first
-                    if (isset($lib->git)) {
-                        $command = 'sh -c "git clone -q ' . $lib->git . ' ' . $destination . '"';
-                        exec($command, $lines, $return_var);
-                        static::debug($command . "\n" . print_r($lines, true));
-                        if (!$return_var) { // Success?
-                            // Now look for packager.json file and extract namespaces
-                            self::_install($destination);
-                        } else {
-                            // Fail loudly ... maybe accumulate the errors and continue
+                    // If the folder exists, we likely already fetched it
+                    if (!file_exists($destination)) {
+                        mkdir($destination, 0755, true); // recursively
+                        // Try git first
+                        if ($source_type == 'git') {
+                            $command = 'sh -c "git clone -q ' . $source_path . ' ' . $destination . '"';
+                            exec($command, $lines, $return_var);
+                            static::debug($command . "\n" . print_r($lines, true));
+                            if (!$return_var) { // Success?
+                                // Now look for packager.json file and extract namespaces
+                                self::_install($destination);
+                            } else {
+                                // Fail loudly ... maybe accumulate the errors and continue
+                            }
+                        }
+                    } else {
+                        // Directory exists ... git pull?
+                        // But don't pull if we've already fetched in this run
+                        if ($source_type == 'git') {
+                            $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
+                            exec($command, $lines, $return_var);
+                            static::debug($command . "\n" . print_r($lines, true));
+                            if (!$return_var) { // Success?
+                                // Now look for packager.json file and extract namespaces
+                                self::_install($destination);
+                            } else {
+                                // Fail loudly ... maybe accumulate the errors and continue
+                            }
                         }
                     }
-                } else {
-                    // Directory exists ... git pull?
-                    // But don't pull if we've already fetched in this run
-                    if (isset($lib->git)) {
-                        $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
-                        exec($command, $lines, $return_var);
-                        static::debug($command . "\n" . print_r($lines, true));
-                        if (!$return_var) { // Success?
-                            // Now look for packager.json file and extract namespaces
-                            self::_install($destination);
-                        } else {
-                            // Fail loudly ... maybe accumulate the errors and continue
-                        }
-                    }
+                    static::$seen[ $source_path ] = $destination;
                 }
-
-                // TODO: If $lib->git
-                static::$seen[ $lib->git ] = $destination;
             }
         }
     }

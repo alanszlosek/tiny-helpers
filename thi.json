@@ -1,5 +1,5 @@
 {
     "namespaces": {
-        "TinyHelpers": "src/TinyHelpers"
+        "TinyHelpers": "src"
     }
 }
