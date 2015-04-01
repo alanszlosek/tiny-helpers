@@ -40,7 +40,7 @@ class Installer {
         $out = '<?php' . $nl;
         // Should we also install and require the TinyLoader?
         // Ideally we'd auto-add TinyHelpers as a dependency
-        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyLoader.php');" . $nl;
+        $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyHelpers/TinyLoader.php');" . $nl;
         $out .= '$loader = new \\TinyHelpers\\TinyLoader();' . $nl;
         foreach (self::$namespaces as $prefix => $path) {
             $out .= '$loader->setNamespacePath' . "('$prefix','$path');" . $nl;
