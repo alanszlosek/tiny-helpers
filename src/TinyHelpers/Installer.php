@@ -1,29 +1,57 @@
 <?php
 namespace TinyHelpers;
 /*
-Is there a way to have a single string representing a git URL and branch/tag/revision?
-    URL#bla should work
+This class is like PHP Composer, but it makes more assumptions and has less features.
 
-Deps, Installer, Packager ... not sure what to call it
+Features:
 
+* Installs dependencies from git repos
+* Creates a thi-autoload.php file you can include to autoload namespaced classes
+
+Assumptions:
+
+* That all classes within a top-level namespace are contained in the same subfolder tree
+    * ie. \Project\Models\First and \Project\Models\Second must have the same Project folder as a parent
+* Namespace paths are a mirror of file-system paths:
+    * Example: The \MyApplication\Controllers\Base class lives at ./MyApplication/Controllers/Base.php
+
+To add support to your project
+
+* Create a thi.json file. See the example below.
+* Specify the namespaces local to your project. The value of each is the path where your top-level namespace lives.
+* Include this Installer.php file in your code so your users can use it to install deps
+
+Usage:
+
+* Within the folder containing a thi.json:
+* `php /path/to/TinyHelpers/Installer.php`
+* Dependencies will be downloaded, and their namespaces condensed into `thi-autoload.php`
+
+Example thi.json file:
 {
     "name": "Project name. Not required, not used at all, but is helpful for users",
     "namespaces": {
-        "NamespacePrefix": "relative/sub/folder",
-        "NamespacePrefix2": "another/relative/sub/folder"
+        "FirstNamespace": "src/", // src contains a "FirstNamespace" folder
+        "SecondNamespace": "src/" // src also contains a "SecondNamespace" folder
     },
     "dependencies": {
         // These keys represent the checkout destination within the vendor folder
-        "dbFacile": {
-            "git": "https://github.com/alanszlosek/grrr-orms.git"
+        "alanszlosek/dbFacile": {
+            "git": "https://github.com/alanszlosek/dbFacile.git"
         }
     }
 }
+
+TODO:
+
+Is there a way to have a single string representing a git URL and branch/tag/revision?
+    URL#bla should work
 
 */
 define('INSTALLER_FILE', 'thi.json'); // stands for Tiny Helpers Installer
 
 class Installer {
+    protected static $vendorFolder;
     protected static $seen = array(); // We keep track of dependency locations, so we don't fetch the same location more than once
     public static $namespaces = array();
     public static $debugging = true;
@@ -34,7 +62,21 @@ class Installer {
         }
     }
     public static function install($dir) {
-        self::_install($dir);
+        // Prepare vendor folder
+        // Would like all deps to be installed in the same top-level vendor folder
+        $folders = explode(DIRECTORY_SEPARATOR, $dir);
+        $folders = array_filter($folders);
+        $dir = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $folders);
+        array_push($folders, 'vendor');
+        static::$vendorFolder = DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $folders);
+        if (!file_exists(static::$vendorFolder)) {
+            if (!mkdir(static::$vendorFolder)) {
+                static::debug('Failed to make vendor folder');
+                return false;
+            }
+        }
+        
+        self::_install_dir($dir);
 
         $nl = "\n";
         $out = '<?php' . $nl;
@@ -51,7 +93,8 @@ class Installer {
         file_put_contents($autoload, $out);
     }
 
-    protected static function _install($dir) {
+    // Refactored, but theses two methods need slightly better names
+    protected static function _install_dir($dir) {
         $file = $dir . DIRECTORY_SEPARATOR . INSTALLER_FILE;
         if (!file_exists($file)) {
             // TODO: Mention which directory we're looking in
@@ -66,9 +109,13 @@ class Installer {
         }
         $data = json_decode($json, false);
 
+        self::_install_json($data, $dir);
+    }
+
+    protected static function _install_json($data, $dir) {
         // Autoloader stuff
         if (isset($data->namespaces)) {
-            foreach ($data->namespaces as $prefix => $path) {
+           foreach ($data->namespaces as $prefix => $path) {
                 if (isset(self::$namespaces[ $prefix ])) {
                     static::debug($prefix . ' namespace already mapped. Skipping');
                 } else {
@@ -82,48 +129,47 @@ class Installer {
                 //$folders = preg_split("@[/\\]+@", $name);
                 $folders = explode('/', $name);
                 $folders = array_filter($folders);
-                array_unshift($folders, $dir, 'vendor');
+                // Would like all deps to be in the top-level vendor folder
+                array_unshift($folders, static::$vendorFolder);
                 $destination = implode(DIRECTORY_SEPARATOR, $folders);
 
+                // TRY GIT FIRST
+                if (isset($sources->git)) {
+                    $source_path = $sources->git;
 
-                foreach ($sources as $source_type => $source_path) {
-                    // Have we already fetched this dependency?
+                    // Did we already fetch this dependency during this install run?
                     if (isset(static::$seen[ $source_path ])) {
                         static::debug('Already loaded, skipping ' . $source_path);
                         continue;
                     }
+                    static::$seen[ $source_path ] = $destination;
 
-                    // If the folder exists, we likely already fetched it
+                    // Prepare folder and git commands to run
                     if (!file_exists($destination)) {
                         mkdir($destination, 0755, true); // recursively
-                        // Try git first
-                        if ($source_type == 'git') {
-                            $command = 'sh -c "git clone -q ' . $source_path . ' ' . $destination . '"';
-                            exec($command, $lines, $return_var);
-                            static::debug($command . "\n" . print_r($lines, true));
-                            if (!$return_var) { // Success?
-                                // Now look for packager.json file and extract namespaces
-                                self::_install($destination);
-                            } else {
-                                // Fail loudly ... maybe accumulate the errors and continue
-                            }
-                        }
+                        $command = 'sh -c "git clone -q ' . $source_path . ' ' . $destination . '"';
                     } else {
                         // Directory exists ... git pull?
-                        // But don't pull if we've already fetched in this run
-                        if ($source_type == 'git') {
-                            $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
-                            exec($command, $lines, $return_var);
-                            static::debug($command . "\n" . print_r($lines, true));
-                            if (!$return_var) { // Success?
-                                // Now look for packager.json file and extract namespaces
-                                self::_install($destination);
-                            } else {
-                                // Fail loudly ... maybe accumulate the errors and continue
-                            }
-                        }
+                        $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
                     }
-                    static::$seen[ $source_path ] = $destination;
+                    exec($command, $lines, $return_var);
+                    static::debug($command . "\n" . print_r($lines, true));
+                } else {
+                    static::debug('No valid package sources found');
+                    continue;
+                }
+                if (!$return_var) { // Success?
+                    // Do we have a thi.json override for this dependency?
+                    if (isset($sources->__thi)) {
+                        static::debug('Using thi.json override');
+                        self::_install_json($sources->__thi, $destination);
+                    } else {
+                        // Now look for thi.json file and extract namespaces
+                        self::_install_dir($destination);
+                    }
+                } else {
+                    // Fail loudly ... maybe accumulate the errors and continue
+                    static::debug('Command failed: ' . $command);
                 }
             }
         }

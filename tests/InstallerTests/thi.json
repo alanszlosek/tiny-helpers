@@ -7,7 +7,17 @@
             "git": "https://github.com/alanszlosek/tiny-helpers.git"
         },
         "Collections": {
-            "git": "https://github.com/alanszlosek/collections.git"
+            "git": "https://github.com/alanszlosek/collections.git",
+            "__thi": {
+                "namespaces": {
+                    "Collections": "src"
+                },
+                "dependencies": {
+                    "dbFacile": {
+                        "git": "https://github.com/alanszlosek/dbFacile.git"
+                    }
+                }
+            }
         }
     }
 }

@@ -14,5 +14,6 @@ class InstallerTests extends \PHPUnit_Framework_TestCase
         // Verify thi-autoload.php
         require('InstallerTests/thi-autoload.php');
         $this->assertEquals('DefaultPassword', \Collections\Application::$password);
+        $this->assertInstanceOf('\\dbFacile\\mysqli', \dbFacile\factory::mysqli());
     }
 }
