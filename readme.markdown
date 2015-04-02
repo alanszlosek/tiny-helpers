@@ -6,8 +6,10 @@ These are standalone classes that play well with your in-house framework, spaghe
 * Routing engine
 * Incremental markup builder with HTML special character preparation (H class)
 * Input validator that works on deeply nested arrays of data
+* Autoloader
+* Package and dependency installer (like PHP Composer)
 
-Route class
+Route class - URL Routing engine
 ----
 
 Example URL: http://abc.com/category/123?offset=2
@@ -42,7 +44,7 @@ Now pass it to dispatch():
 See the unit tests for a more complex example.
 
 
-H class
+H class - Programmatic HTML generation
 ----
 
 For when you need to build HTML programatically. It helps you build markup, leveraging __toString() to generate the HTML tags. And it can help you with htmlentities/htmlspecialchars.
@@ -84,7 +86,7 @@ Form fields:
 	echo H::select()->name('choice')->value('b')->options($options);
 
 
-Validate class
+Validate class - Input validation
 ----
 
 Perhaps you want to validate POST data (maybe you have nested fields with names like "product[1][name]"). Perhaps you need it to play nice with your existing framework or legacy code. Maybe you want the power to construct your own validation functions or regex patters. In that case, Validator is for you.
@@ -92,7 +94,7 @@ Perhaps you want to validate POST data (maybe you have nested fields with names 
 Check tests/ValidateTests.php for example usage
 
 
-TinyLoader class
+TinyLoader class - Class autoloader
 ----
 
 An autoloader. Maps a top-level namespace to a folder. It assumes:
@@ -103,7 +105,7 @@ An autoloader. Maps a top-level namespace to a folder. It assumes:
     * Example: The \MyApplication\Controllers\Base class lives at /some/path/MyApplication/Controllers/Base.php
 
 
-Installer class
+Installer class - Think PHP Composer
 ----
 
 My light-on-features version of PHP Composer. Partners with TinyLoader to autoload namespaced classes.
