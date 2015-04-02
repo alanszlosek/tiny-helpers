@@ -90,3 +90,20 @@ Validate class
 Perhaps you want to validate POST data (maybe you have nested fields with names like "product[1][name]"). Perhaps you need it to play nice with your existing framework or legacy code. Maybe you want the power to construct your own validation functions or regex patters. In that case, Validator is for you.
 
 Check tests/ValidateTests.php for example usage
+
+
+TinyLoader class
+----
+
+An autoloader. Maps a top-level namespace to a folder. It assumes:
+
+* That all classes within a top-level namespace are contained in the same subfolder tree
+    * ie. \Project\Models\First and \Project\Models\Second must have the same Project folder as a parent
+* Namespace paths are a mirror of file-system paths:
+    * Example: The \MyApplication\Controllers\Base class lives at /some/path/MyApplication/Controllers/Base.php
+
+
+Installer class
+----
+
+My light-on-features version of PHP Composer. Partners with TinyLoader to autoload namespaced classes.

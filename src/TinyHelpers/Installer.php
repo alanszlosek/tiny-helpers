@@ -7,6 +7,7 @@ Features:
 
 * Installs dependencies from git repos
 * Creates a thi-autoload.php file you can include to autoload namespaced classes
+* For packages without a thi.json package definition file, you can specify the JSON in your own definition file
 
 Assumptions:
 
@@ -15,7 +16,7 @@ Assumptions:
 * Namespace paths are a mirror of file-system paths:
     * Example: The \MyApplication\Controllers\Base class lives at ./MyApplication/Controllers/Base.php
 
-To add support to your project
+To add support to your project:
 
 * Create a thi.json file. See the example below.
 * Specify the namespaces local to your project. The value of each is the path where your top-level namespace lives.
@@ -23,9 +24,8 @@ To add support to your project
 
 Usage:
 
-* Within the folder containing a thi.json:
-* `php /path/to/TinyHelpers/Installer.php`
-* Dependencies will be downloaded, and their namespaces condensed into `thi-autoload.php`
+* Within the folder containing a thi.json: `php /path/to/TinyHelpers/Installer.php`
+* Dependencies will be downloaded, their namespaces added to `thi-autoload.php`
 
 Example thi.json file:
 {
@@ -37,7 +37,15 @@ Example thi.json file:
     "dependencies": {
         // These keys represent the checkout destination within the vendor folder
         "alanszlosek/dbFacile": {
-            "git": "https://github.com/alanszlosek/dbFacile.git"
+            "git": "https://github.com/alanszlosek/dbFacile.git",
+            // Use this config, instead of dbFacile's thi.json ... useful if a dependency doesn't have one
+            "__thi_json": {
+                "name": "alanszlosek/dbfacile",
+                "description": "Interact with databases in PHP5 with 1 line of code",
+                "namespaces": {
+                    "dbFacile": "src"
+                }
+            }
         }
     }
 }
@@ -51,7 +59,7 @@ Is there a way to have a single string representing a git URL and branch/tag/rev
 define('INSTALLER_FILE', 'thi.json'); // stands for Tiny Helpers Installer
 
 class Installer {
-    protected static $vendorFolder;
+    protected static $vendorFolder; // So we can install all dependencies (and each dependency's dependencies) in the same vendor folder
     protected static $seen = array(); // We keep track of dependency locations, so we don't fetch the same location more than once
     public static $namespaces = array();
     public static $debugging = true;
@@ -80,7 +88,7 @@ class Installer {
 
         $nl = "\n";
         $out = '<?php' . $nl;
-        // Should we also install and require the TinyLoader?
+        // TODO: Should we also install and require the TinyLoader?
         // Ideally we'd auto-add TinyHelpers as a dependency
         $out .= "require('" . self::$namespaces['TinyHelpers'] . "/TinyHelpers/TinyLoader.php');" . $nl;
         $out .= '$loader = new \\TinyHelpers\\TinyLoader();' . $nl;
@@ -113,7 +121,6 @@ class Installer {
     }
 
     protected static function _install_json($data, $dir) {
-        // Autoloader stuff
         if (isset($data->namespaces)) {
            foreach ($data->namespaces as $prefix => $path) {
                 if (isset(self::$namespaces[ $prefix ])) {
