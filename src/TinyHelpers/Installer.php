@@ -131,53 +131,61 @@ class Installer {
             }
         }
 
-        if (isset($data->dependencies)) {
-            foreach ($data->dependencies as $name => $sources) {
-                //$folders = preg_split("@[/\\]+@", $name);
-                $folders = explode('/', $name);
-                $folders = array_filter($folders);
-                // Would like all deps to be in the top-level vendor folder
-                array_unshift($folders, static::$vendorFolder);
-                $destination = implode(DIRECTORY_SEPARATOR, $folders);
+        if (!isset($data->dependencies)) {
+            // TinyHelpers is always a dependency
+            $data->dependencies = new \stdClass();
+        }
+        if (!property_exists($data->dependencies, 'tiny-helpers')) {
+            $key = 'tiny-helpers';
+            $data->dependencies->$key = (object)array(
+                "git" => "https://github.com/alanszlosek/tiny-helpers.git"
+            );
+        }
+        foreach ($data->dependencies as $name => $sources) {
+            //$folders = preg_split("@[/\\]+@", $name);
+            $folders = explode('/', $name);
+            $folders = array_filter($folders);
+            // Would like all deps to be in the top-level vendor folder
+            array_unshift($folders, static::$vendorFolder);
+            $destination = implode(DIRECTORY_SEPARATOR, $folders);
 
-                // TRY GIT FIRST
-                if (isset($sources->git)) {
-                    $source_path = $sources->git;
+            // TRY GIT FIRST
+            if (isset($sources->git)) {
+                $source_path = $sources->git;
 
-                    // Did we already fetch this dependency during this install run?
-                    if (isset(static::$seen[ $source_path ])) {
-                        static::debug('Already loaded, skipping ' . $source_path);
-                        continue;
-                    }
-                    static::$seen[ $source_path ] = $destination;
-
-                    // Prepare folder and git commands to run
-                    if (!file_exists($destination)) {
-                        mkdir($destination, 0755, true); // recursively
-                        $command = 'sh -c "git clone -q ' . $source_path . ' ' . $destination . '"';
-                    } else {
-                        // Directory exists ... git pull?
-                        $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
-                    }
-                    exec($command, $lines, $return_var);
-                    static::debug($command . "\n" . print_r($lines, true));
-                } else {
-                    static::debug('No valid package sources found');
+                // Did we already fetch this dependency during this install run?
+                if (isset(static::$seen[ $source_path ])) {
+                    static::debug('Already loaded, skipping ' . $source_path);
                     continue;
                 }
-                if (!$return_var) { // Success?
-                    // Do we have a thi.json override for this dependency?
-                    if (isset($sources->__thi)) {
-                        static::debug('Using thi.json override');
-                        self::_install_json($sources->__thi, $destination);
-                    } else {
-                        // Now look for thi.json file and extract namespaces
-                        self::_install_dir($destination);
-                    }
+                static::$seen[ $source_path ] = $destination;
+
+                // Prepare folder and git commands to run
+                if (!file_exists($destination)) {
+                    mkdir($destination, 0755, true); // recursively
+                    $command = 'sh -c "git clone -q ' . $source_path . ' ' . $destination . '"';
                 } else {
-                    // Fail loudly ... maybe accumulate the errors and continue
-                    static::debug('Command failed: ' . $command);
+                    // Directory exists ... git pull?
+                    $command = '/bin/sh -c "cd ' . $destination . ' && git pull"';
                 }
+                exec($command, $lines, $return_var);
+                static::debug($command . "\n" . print_r($lines, true));
+            } else {
+                static::debug('No valid package sources found');
+                continue;
+            }
+            if (!$return_var) { // Success?
+                // Do we have a thi.json override for this dependency?
+                if (isset($sources->__thi)) {
+                    static::debug('Using thi.json override');
+                    self::_install_json($sources->__thi, $destination);
+                } else {
+                    // Now look for thi.json file and extract namespaces
+                    self::_install_dir($destination);
+                }
+            } else {
+                // Fail loudly ... maybe accumulate the errors and continue
+                static::debug('Command failed: ' . $command);
             }
         }
     }
