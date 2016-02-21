@@ -73,6 +73,12 @@ class Route
         $path = trim($path, '/');
         // Start label object
         $labels = new \stdClass;
+
+        // Start off $labels with everything from $_GET
+        foreach ($_GET as $key => $value) {
+                $labels->$key = $value;
+        }
+
         $labels->__routerInstance = $this;
         $labels->__pathString = $path;
         // Don't explode an empty string ... it does weird things
