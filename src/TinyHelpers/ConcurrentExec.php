@@ -77,7 +77,7 @@ class Command {
 	}
 }
 
-class AsyncExec {
+class ConcurrentExec {
 	protected $commands;
 	public function __construct($commands) {
 		$this->commands = $commands;
