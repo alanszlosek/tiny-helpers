@@ -8,6 +8,8 @@ These are standalone classes that play well with your in-house framework, spaghe
 * Input validator that works on deeply nested arrays of data
 * Autoloader
 * Package and dependency installer (like PHP Composer)
+* ConcurrentExec runs an array of commands in batches, returns the output when they're finished
+* StatsD client pushes batches of metrics over UDP
 
 Route class - URL Routing engine
 ----
@@ -109,3 +111,24 @@ Installer class - Think PHP Composer
 ----
 
 My light-on-features version of PHP Composer. Partners with TinyLoader to autoload namespaced classes.
+
+
+ConcurrentExec - Forks shells to run commands concurrently
+----
+
+    $commands = array(
+        'a' => 'date',
+        'b' => 'ls /',
+        'c' => 'sleep 10'
+    );
+    $run = new \TinyHelpers\ConcurrentExec($commands);
+    // Run up to 10 at a time
+    $results = $run->run(10);
+    /*
+    Gives you:
+    array(
+        'a' => 'Fri Mar  4 10:43:30 EST 2016',
+        'b' => 'Applications System ...',
+        'c' => ''
+    );
+    */
